@@ -229,10 +229,16 @@
             position: relative;
         }
 
-        .cancel-btn {
+        .form-controls {
             position: absolute;
             top: 1rem;
             right: 1rem;
+            display: flex;
+            gap: 0.5rem;
+            z-index: 10;
+        }
+
+        .cancel-btn, .back-btn {
             background: var(--danger);
             color: white;
             border: none;
@@ -243,7 +249,10 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            z-index: 10;
+        }
+
+        .back-btn {
+            background: var(--accent-secondary);
         }
 
         .film-card {
@@ -571,9 +580,14 @@
         <section class="search-results hidden" id="search-results"></section>
         
         <section class="add-form-container hidden" id="add-form-container">
-            <button class="cancel-btn" id="cancel-film-btn">
-                <i class="fas fa-times"></i>
-            </button>
+            <div class="form-controls">
+                <button class="back-btn" id="back-to-search-btn" title="Вернуться к результатам поиска">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <button class="cancel-btn" id="cancel-film-btn" title="Отменить выбор фильма">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
         </section>
         
         <section class="films-section">
@@ -643,6 +657,7 @@
                 searchResults: document.getElementById('search-results'),
                 addFormContainer: document.getElementById('add-form-container'),
                 cancelFilmBtn: document.getElementById('cancel-film-btn'),
+                backToSearchBtn: document.getElementById('back-to-search-btn'),
                 genreFilter: document.getElementById('genre-filter'),
                 sortSelect: document.getElementById('sort-select'),
                 filmsContainer: document.getElementById('films-container')
@@ -650,6 +665,7 @@
 
             let films = [];
             let currentFilm = null;
+            let lastSearchResults = [];
 
             function init() {
                 loadFromLocalStorage();
@@ -661,6 +677,7 @@
                 elements.themeToggle.addEventListener('click', toggleTheme);
                 elements.searchFilmBtn.addEventListener('click', handleFilmSearch);
                 elements.cancelFilmBtn.addEventListener('click', cancelFilmSelection);
+                elements.backToSearchBtn.addEventListener('click', backToSearchResults);
                 
                 elements.filmInput.addEventListener('input', debounce(() => {
                     const query = elements.filmInput.value.trim();
@@ -684,6 +701,12 @@
             function cancelFilmSelection() {
                 elements.addFormContainer.classList.add('hidden');
                 currentFilm = null;
+                elements.filmInput.value = '';
+            }
+
+            function backToSearchResults() {
+                elements.addFormContainer.classList.add('hidden');
+                elements.searchResults.classList.remove('hidden');
             }
 
             async function searchFilms(query) {
@@ -727,6 +750,9 @@
                 const query = elements.filmInput.value.trim();
                 if (!query) return;
 
+                // Скрываем подсказки при начале поиска
+                elements.searchSuggestions.style.display = 'none';
+
                 elements.searchResults.innerHTML = `
                     <div class="skeleton" style="grid-column: 1 / -1; height: 200px; display: flex; align-items: center; justify-content: center;">
                         <i class="fas fa-spinner fa-spin" style="font-size: 2rem;"></i>
@@ -734,10 +760,11 @@
                     </div>
                 `;
                 elements.searchResults.classList.remove('hidden');
-                elements.searchSuggestions.style.display = 'none';
+                elements.addFormContainer.classList.add('hidden');
 
                 try {
                     const results = await searchFilms(query);
+                    lastSearchResults = results;
                     renderSearchResults(results);
                 } catch (error) {
                     elements.searchResults.innerHTML = `
@@ -778,9 +805,11 @@
                 }
                 else if (e.target.closest('.suggestion-item')) {
                     const filmId = e.target.closest('.suggestion-item').dataset.filmId;
-                    elements.filmInput.value = e.target.closest('.suggestion-item').textContent;
+                    const filmTitle = e.target.closest('.suggestion-item').textContent;
+                    elements.filmInput.value = filmTitle;
                     elements.searchSuggestions.style.display = 'none';
-                    selectFilmFromSearch(filmId);
+                    // Имитируем поиск для выбранного фильма
+                    handleFilmSearchFromSuggestion(filmId);
                 }
                 else if (e.target.id === 'save-rating-btn') {
                     saveFilmRating();
@@ -788,6 +817,30 @@
                 else if (e.target.closest('.delete-btn')) {
                     const filmId = e.target.closest('.film-item').dataset.filmId;
                     deleteFilm(filmId);
+                }
+            }
+
+            async function handleFilmSearchFromSuggestion(filmId) {
+                elements.searchResults.innerHTML = `
+                    <div class="skeleton" style="grid-column: 1 / -1; height: 200px; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-spinner fa-spin" style="font-size: 2rem;"></i>
+                        <span style="margin-left: 1rem;">Загружаем фильм...</span>
+                    </div>
+                `;
+                elements.searchResults.classList.remove('hidden');
+                elements.addFormContainer.classList.add('hidden');
+
+                try {
+                    // Ищем фильм в последних результатах поиска
+                    const filmFromResults = lastSearchResults.find(f => f.id == filmId);
+                    if (filmFromResults) {
+                        renderSearchResults([filmFromResults]);
+                    } else {
+                        // Если не нашли в кэше, делаем новый поиск
+                        await handleFilmSearch();
+                    }
+                } catch (error) {
+                    console.error('Ошибка загрузки фильма из подсказки:', error);
                 }
             }
 
@@ -897,7 +950,19 @@
 
                 document.getElementById('personal-rating').addEventListener('input', (e) => {
                     document.getElementById('personal-rating-value').textContent = e.target.value;
-                    updateTotalScore();
+                    // Личное впечатление больше не влияет на общую оценку
+                });
+
+                // Обработчики для основных критериев
+                criteriaConfig.forEach(criterion => {
+                    const slider = document.getElementById(criterion.id);
+                    if (slider) {
+                        slider.addEventListener('input', (e) => {
+                            const valueDisplay = e.target.nextElementSibling;
+                            if (valueDisplay) valueDisplay.textContent = e.target.value;
+                            updateTotalScore();
+                        });
+                    }
                 });
 
                 updateTotalScore();
@@ -906,19 +971,13 @@
             function updateTotalScore() {
                 let total = 0;
                 
-                // Считаем основную оценку по критериям
+                // Считаем только основную оценку по критериям (личное впечатление не влияет)
                 criteriaConfig.forEach(criterion => {
                     const slider = document.getElementById(criterion.id);
                     if (slider) {
                         total += parseFloat(slider.value) * criterion.weight;
                     }
                 });
-
-                // Добавляем влияние личного впечатления (25%)
-                const personalSlider = document.getElementById('personal-rating');
-                if (personalSlider) {
-                    total = total * 0.75 + parseFloat(personalSlider.value) * 0.25;
-                }
 
                 const totalScoreElement = document.getElementById('total-score');
                 if (totalScoreElement) {
@@ -951,8 +1010,8 @@
                 const selectedGenre = document.getElementById('genre-select').value;
                 const comment = document.getElementById('comment').value.trim();
 
-                // Финальный расчет с учетом личного впечатления
-                total = total * 0.75 + personalRating * 0.25;
+                // Только основная оценка (личное впечатление не влияет)
+                total = Math.round(total);
 
                 const filmData = {
                     id: currentFilm.id.toString(),
@@ -961,7 +1020,7 @@
                     genre: currentFilm.genre,
                     poster: currentFilm.poster,
                     ratings: ratings,
-                    totalScore: Math.round(total),
+                    totalScore: total,
                     genreScore: genreScore,
                     genreForScore: selectedGenre,
                     personalRating: personalRating,
