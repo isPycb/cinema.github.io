@@ -449,6 +449,7 @@
             display: flex;
             flex-direction: column;
             transition: transform 0.3s ease;
+            cursor: pointer;
         }
 
         .film-item:hover {
@@ -546,12 +547,54 @@
             border-radius: 50%;
             background: var(--accent-primary);
             opacity: 0.05;
-            filter: blur(80px);
+            filter: blur(80px;
             z-index: -1;
         }
 
         .shape-1 { top: 10%; left: 10%; }
         .shape-2 { bottom: 20%; right: 10%; width: 400px; height: 400px; background: var(--success); }
+
+        /* Модальное окно для просмотра оценки */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 2rem;
+            max-width: 800px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: var(--danger);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
     </style>
 </head>
 <body>
@@ -612,6 +655,16 @@
         </section>
     </main>
 
+    <!-- Модальное окно для просмотра оценки -->
+    <div class="modal-overlay hidden" id="film-modal">
+        <div class="modal-content glass">
+            <button class="modal-close" id="modal-close">
+                <i class="fas fa-times"></i>
+            </button>
+            <div id="modal-content"></div>
+        </div>
+    </div>
+
     <script>
         const KINOPOISK_API = {
             BASE_URL: 'https://api.kinopoisk.dev/v1.4',
@@ -619,7 +672,7 @@
         };
 
         function handleImageError(img) {
-            img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjQ1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMzMzIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0iI2ZmZiIgdGV4dC1hbmNob3I9Im1iZGRsZSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSI+0J/QvtC00YLRg9C10YIgTm90IEZvdW5kPC90ZXh0Pjwvc3ZnPg==';
+            img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjQ1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMzMzIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0iI2ZmZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSI+0J/QvtC00YLRg9C10YIgTm90IEZvdW5kPC90ZXh0Pjwvc3ZnPg==';
             img.onerror = null;
         }
 
@@ -635,7 +688,6 @@
             };
         }
 
-        // Функция для скролла наверх
         function scrollToTop() {
             window.scrollTo({
                 top: 0,
@@ -664,7 +716,10 @@
                 backToSearchBtn: document.getElementById('back-to-search-btn'),
                 genreFilter: document.getElementById('genre-filter'),
                 sortSelect: document.getElementById('sort-select'),
-                filmsContainer: document.getElementById('films-container')
+                filmsContainer: document.getElementById('films-container'),
+                filmModal: document.getElementById('film-modal'),
+                modalClose: document.getElementById('modal-close'),
+                modalContent: document.getElementById('modal-content')
             };
 
             let films = [];
@@ -682,9 +737,10 @@
                 elements.searchFilmBtn.addEventListener('click', handleFilmSearch);
                 elements.cancelFilmBtn.addEventListener('click', cancelFilmSelection);
                 elements.backToSearchBtn.addEventListener('click', backToSearchResults);
+                elements.modalClose.addEventListener('click', closeModal);
                 
                 elements.filmInput.addEventListener('input', debounce(() => {
-                    const query = elements.filmInput.value.trim(); // Убираем пробелы
+                    const query = elements.filmInput.value.trim();
                     if (query.length > 2) {
                         showSearchSuggestions(query);
                     } else {
@@ -700,6 +756,99 @@
                 elements.sortSelect.addEventListener('change', () => renderFilmList());
                 document.addEventListener('click', handleDynamicClick);
                 document.addEventListener('input', handleDynamicInput);
+
+                // Закрытие модального окна по клику вне его
+                elements.filmModal.addEventListener('click', (e) => {
+                    if (e.target === elements.filmModal) {
+                        closeModal();
+                    }
+                });
+            }
+
+            function closeModal() {
+                elements.filmModal.classList.add('hidden');
+            }
+
+            function showFilmDetails(filmId) {
+                const film = films.find(f => f.id === filmId);
+                if (!film) return;
+
+                elements.modalContent.innerHTML = `
+                    <div class="film-card">
+                        <div class="film-header">
+                            <img src="${film.poster}" alt="${film.title}" class="selected-poster" onerror="handleImageError(this)">
+                            <div class="film-details">
+                                <h2 class="selected-title">${film.title}</h2>
+                                <div>
+                                    <span class="selected-genre">${film.genre}</span>
+                                    <span class="selected-genre">${film.year}</span>
+                                    <span class="selected-genre">⭐ ${film.totalScore}</span>
+                                    ${film.personalRating ? `<span class="selected-genre">♥ ${film.personalRating}</span>` : ''}
+                                </div>
+                                ${film.comment ? `<p class="selected-description">${film.comment}</p>` : ''}
+                            </div>
+                        </div>
+
+                        <div class="total-score-container">
+                            <div class="total-score-label">Итоговая оценка</div>
+                            <div class="total-score-value">${film.totalScore}</div>
+                        </div>
+
+                        <div class="criteria-grid">
+                            ${criteriaConfig.map(criterion => `
+                                <div class="criteria-item">
+                                    <span class="criteria-name">${criterion.name}</span>
+                                    <div class="slider-container">
+                                        <input type="range" class="criteria-slider" 
+                                               min="0" max="100" value="${film.ratings[criterion.id] || 50}" 
+                                               step="1" disabled>
+                                        <span class="criteria-value">${film.ratings[criterion.id] || 50}</span>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+
+                        <div class="additional-fields">
+                            <div class="form-group">
+                                <label>Оценка в рамках жанра: ${film.genreScore || 5}/10</label>
+                                <div class="slider-container">
+                                    <input type="range" min="0" max="10" value="${film.genreScore || 5}" step="0.1" disabled>
+                                </div>
+                                <small>Жанр: ${film.genreForScore || 'Общая'}</small>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Личное впечатление: ${film.personalRating || 50}/100</label>
+                                <div class="slider-container">
+                                    <input type="range" min="0" max="100" value="${film.personalRating || 50}" step="1" disabled>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Комментарий</label>
+                            <textarea disabled>${film.comment || 'Комментарий отсутствует'}</textarea>
+                        </div>
+
+                        <div class="film-item-actions">
+                            <button class="delete-btn" onclick="KinoVisionApp.deleteFilmFromModal('${film.id}')">
+                                <i class="fas fa-trash"></i> Удалить из коллекции
+                            </button>
+                        </div>
+                    </div>
+                `;
+
+                elements.filmModal.classList.remove('hidden');
+                scrollToTop();
+            }
+
+            function deleteFilmFromModal(filmId) {
+                if (confirm('Удалить фильм из коллекции?')) {
+                    films = films.filter(film => film.id !== filmId);
+                    saveToLocalStorage();
+                    renderFilmList();
+                    closeModal();
+                }
             }
 
             function cancelFilmSelection() {
@@ -711,12 +860,12 @@
             function backToSearchResults() {
                 elements.addFormContainer.classList.add('hidden');
                 elements.searchResults.classList.remove('hidden');
-                scrollToTop(); // Скроллим наверх
+                scrollToTop();
             }
 
             async function searchFilms(query) {
                 try {
-                    const cleanQuery = query.trim(); // Чистим запрос от пробелов
+                    const cleanQuery = query.trim();
                     const url = `${KINOPOISK_API.BASE_URL}/movie/search?page=1&limit=20&query=${encodeURIComponent(cleanQuery)}`;
                     
                     const response = await fetch(url, {
@@ -740,7 +889,7 @@
 
             async function showSearchSuggestions(query) {
                 try {
-                    const cleanQuery = query.trim(); // Чистим запрос
+                    const cleanQuery = query.trim();
                     const results = await searchFilms(cleanQuery);
                     elements.searchSuggestions.innerHTML = results.slice(0, 5).map(film => `
                         <div class="suggestion-item" data-film-id="${film.id}">
@@ -754,10 +903,9 @@
             }
 
             async function handleFilmSearch() {
-                const query = elements.filmInput.value.trim(); // Убираем пробелы
+                const query = elements.filmInput.value.trim();
                 if (!query) return;
 
-                // Скрываем подсказки при начале поиска
                 elements.searchSuggestions.style.display = 'none';
 
                 elements.searchResults.innerHTML = `
@@ -773,7 +921,7 @@
                     const results = await searchFilms(query);
                     lastSearchResults = results;
                     renderSearchResults(results);
-                    scrollToTop(); // Скроллим наверх после поиска
+                    scrollToTop();
                 } catch (error) {
                     elements.searchResults.innerHTML = `
                         <div style="grid-column: 1 / -1; text-align: center; padding: 2rem;">
@@ -813,15 +961,20 @@
                 }
                 else if (e.target.closest('.suggestion-item')) {
                     const filmId = e.target.closest('.suggestion-item').dataset.filmId;
-                    const filmTitle = e.target.closest('.suggestion-item').textContent.trim(); // Чистим название
+                    const filmTitle = e.target.closest('.suggestion-item').textContent.trim();
                     elements.filmInput.value = filmTitle;
                     elements.searchSuggestions.style.display = 'none';
                     handleFilmSearchFromSuggestion(filmId);
+                }
+                else if (e.target.closest('.film-item') && !e.target.closest('.delete-btn')) {
+                    const filmId = e.target.closest('.film-item').dataset.filmId;
+                    showFilmDetails(filmId);
                 }
                 else if (e.target.id === 'save-rating-btn') {
                     saveFilmRating();
                 }
                 else if (e.target.closest('.delete-btn')) {
+                    e.stopPropagation();
                     const filmId = e.target.closest('.film-item').dataset.filmId;
                     deleteFilm(filmId);
                 }
@@ -838,15 +991,13 @@
                 elements.addFormContainer.classList.add('hidden');
 
                 try {
-                    // Ищем фильм в последних результатах поиска
                     const filmFromResults = lastSearchResults.find(f => f.id == filmId);
                     if (filmFromResults) {
                         renderSearchResults([filmFromResults]);
                     } else {
-                        // Если не нашли в кэше, делаем новый поиск
                         await handleFilmSearch();
                     }
-                    scrollToTop(); // Скроллим наверх
+                    scrollToTop();
                 } catch (error) {
                     console.error('Ошибка загрузки фильма из подсказки:', error);
                 }
@@ -880,7 +1031,7 @@
 
                     renderAddForm(currentFilm);
                     elements.searchResults.classList.add('hidden');
-                    scrollToTop(); // Скроллим наверх при выборе фильма
+                    scrollToTop();
 
                 } catch (error) {
                     alert('Ошибка загрузки данных фильма');
@@ -951,7 +1102,6 @@
                     </div>
                 `;
 
-                // Добавляем обработчики для обновления значений
                 document.getElementById('genre-score').addEventListener('input', (e) => {
                     document.getElementById('genre-score-value').textContent = e.target.value;
                     updateTotalScore();
@@ -961,7 +1111,6 @@
                     document.getElementById('personal-rating-value').textContent = e.target.value;
                 });
 
-                // Обработчики для основных критериев
                 criteriaConfig.forEach(criterion => {
                     const slider = document.getElementById(criterion.id);
                     if (slider) {
@@ -979,7 +1128,6 @@
             function updateTotalScore() {
                 let total = 0;
                 
-                // Считаем только основную оценку по критериям (личное впечатление не влияет)
                 criteriaConfig.forEach(criterion => {
                     const slider = document.getElementById(criterion.id);
                     if (slider) {
@@ -1005,7 +1153,6 @@
                 const ratings = {};
                 let total = 0;
 
-                // Сбор оценок по критериям
                 criteriaConfig.forEach(criterion => {
                     const slider = document.getElementById(criterion.id);
                     const value = parseFloat(slider.value);
@@ -1018,7 +1165,6 @@
                 const selectedGenre = document.getElementById('genre-select').value;
                 const comment = document.getElementById('comment').value.trim();
 
-                // Только основная оценка (личное впечатление не влияет)
                 total = Math.round(total);
 
                 const filmData = {
@@ -1054,14 +1200,12 @@
                 
                 let filteredFilms = films;
 
-                // Фильтрация по жанру
                 if (selectedGenre !== 'all') {
                     filteredFilms = films.filter(film => 
                         film.genre.toLowerCase().includes(selectedGenre.toLowerCase())
                     );
                 }
 
-                // Сортировка
                 switch (sortBy) {
                     case 'rating':
                         filteredFilms.sort((a, b) => b.totalScore - a.totalScore);
@@ -1134,8 +1278,16 @@
                 if (theme) document.documentElement.setAttribute('data-theme', theme);
             }
 
-            return { init };
+            // Публичные методы для глобального доступа
+            return {
+                init,
+                deleteFilmFromModal,
+                showFilmDetails
+            };
         })();
+
+        // Глобальные функции для доступа из HTML
+        window.KinoVisionApp = KinoVisionApp;
 
         document.addEventListener('DOMContentLoaded', () => KinoVisionApp.init());
     </script>
