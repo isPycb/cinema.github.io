@@ -435,71 +435,66 @@
             font-family: inherit;
         }
 
+        /* КОМПАКТНЫЕ КАРТОЧКИ ФИЛЬМОВ В КОЛЛЕКЦИИ */
         .films-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 2rem;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1.5rem;
         }
 
         .film-item {
             background: var(--bg-card);
-            border-radius: 16px;
+            border-radius: 12px;
             overflow: hidden;
             display: flex;
             flex-direction: column;
+            transition: transform 0.3s ease;
+        }
+
+        .film-item:hover {
+            transform: translateY(-5px);
         }
 
         .film-item-poster {
             width: 100%;
-            height: 350px;
+            height: 280px;
             object-fit: cover;
         }
 
-        .film-item-content {
-            padding: 1.5rem;
-            flex: 1;
+        .film-item-info {
+            padding: 1rem;
+            background: var(--bg-secondary);
             display: flex;
             flex-direction: column;
-        }
-
-        .film-item-header {
-            margin-bottom: 1rem;
+            gap: 0.3rem;
         }
 
         .film-item-title {
-            font-size: 1.3rem;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .film-item-year {
+            font-size: 0.8rem;
             color: var(--text-secondary);
-            font-size: 0.9rem;
-            margin-bottom: 0.5rem;
         }
 
         .film-item-score {
-            text-align: center;
-            margin: 1rem 0;
-        }
-
-        .film-item-total {
-            font-size: 2.5rem;
-            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            font-weight: 600;
             color: var(--accent-primary);
         }
 
-        .film-item-personal {
-            font-size: 1rem;
-            color: var(--text-secondary);
-            margin-top: 0.5rem;
-        }
-
         .film-item-actions {
-            margin-top: auto;
+            margin-top: 0.5rem;
             display: flex;
             justify-content: flex-end;
-            padding-top: 1rem;
         }
 
         .delete-btn {
@@ -507,9 +502,10 @@
             border: none;
             color: var(--danger);
             cursor: pointer;
+            font-size: 0.8rem;
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 0.3rem;
         }
 
         .hidden {
@@ -623,7 +619,7 @@
         };
 
         function handleImageError(img) {
-            img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjQ1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMzMzIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0iI2ZmZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSI+0J/QvtC00YLRg9C10YIgTm90IEZvdW5kPC90ZXh0Pjwvc3ZnPg==';
+            img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjQ1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMzMzIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0iI2ZmZiIgdGV4dC1hbmNob3I9Im1iZGRsZSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSI+0J/QvtC00YLRg9C10YIgTm90IEZvdW5kPC90ZXh0Pjwvc3ZnPg==';
             img.onerror = null;
         }
 
@@ -637,6 +633,14 @@
                 clearTimeout(timeout);
                 timeout = setTimeout(later, wait);
             };
+        }
+
+        // Функция для скролла наверх
+        function scrollToTop() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
         }
 
         const KinoVisionApp = (() => {
@@ -680,7 +684,7 @@
                 elements.backToSearchBtn.addEventListener('click', backToSearchResults);
                 
                 elements.filmInput.addEventListener('input', debounce(() => {
-                    const query = elements.filmInput.value.trim();
+                    const query = elements.filmInput.value.trim(); // Убираем пробелы
                     if (query.length > 2) {
                         showSearchSuggestions(query);
                     } else {
@@ -707,11 +711,13 @@
             function backToSearchResults() {
                 elements.addFormContainer.classList.add('hidden');
                 elements.searchResults.classList.remove('hidden');
+                scrollToTop(); // Скроллим наверх
             }
 
             async function searchFilms(query) {
                 try {
-                    const url = `${KINOPOISK_API.BASE_URL}/movie/search?page=1&limit=20&query=${encodeURIComponent(query)}`;
+                    const cleanQuery = query.trim(); // Чистим запрос от пробелов
+                    const url = `${KINOPOISK_API.BASE_URL}/movie/search?page=1&limit=20&query=${encodeURIComponent(cleanQuery)}`;
                     
                     const response = await fetch(url, {
                         method: 'GET',
@@ -734,7 +740,8 @@
 
             async function showSearchSuggestions(query) {
                 try {
-                    const results = await searchFilms(query);
+                    const cleanQuery = query.trim(); // Чистим запрос
+                    const results = await searchFilms(cleanQuery);
                     elements.searchSuggestions.innerHTML = results.slice(0, 5).map(film => `
                         <div class="suggestion-item" data-film-id="${film.id}">
                             ${film.name} (${film.year})
@@ -747,7 +754,7 @@
             }
 
             async function handleFilmSearch() {
-                const query = elements.filmInput.value.trim();
+                const query = elements.filmInput.value.trim(); // Убираем пробелы
                 if (!query) return;
 
                 // Скрываем подсказки при начале поиска
@@ -766,6 +773,7 @@
                     const results = await searchFilms(query);
                     lastSearchResults = results;
                     renderSearchResults(results);
+                    scrollToTop(); // Скроллим наверх после поиска
                 } catch (error) {
                     elements.searchResults.innerHTML = `
                         <div style="grid-column: 1 / -1; text-align: center; padding: 2rem;">
@@ -805,10 +813,9 @@
                 }
                 else if (e.target.closest('.suggestion-item')) {
                     const filmId = e.target.closest('.suggestion-item').dataset.filmId;
-                    const filmTitle = e.target.closest('.suggestion-item').textContent;
+                    const filmTitle = e.target.closest('.suggestion-item').textContent.trim(); // Чистим название
                     elements.filmInput.value = filmTitle;
                     elements.searchSuggestions.style.display = 'none';
-                    // Имитируем поиск для выбранного фильма
                     handleFilmSearchFromSuggestion(filmId);
                 }
                 else if (e.target.id === 'save-rating-btn') {
@@ -839,6 +846,7 @@
                         // Если не нашли в кэше, делаем новый поиск
                         await handleFilmSearch();
                     }
+                    scrollToTop(); // Скроллим наверх
                 } catch (error) {
                     console.error('Ошибка загрузки фильма из подсказки:', error);
                 }
@@ -872,6 +880,7 @@
 
                     renderAddForm(currentFilm);
                     elements.searchResults.classList.add('hidden');
+                    scrollToTop(); // Скроллим наверх при выборе фильма
 
                 } catch (error) {
                     alert('Ошибка загрузки данных фильма');
@@ -950,7 +959,6 @@
 
                 document.getElementById('personal-rating').addEventListener('input', (e) => {
                     document.getElementById('personal-rating-value').textContent = e.target.value;
-                    // Личное впечатление больше не влияет на общую оценку
                 });
 
                 // Обработчики для основных критериев
@@ -1080,16 +1088,14 @@
 
                 elements.filmsContainer.innerHTML = filteredFilms.length > 0 ? 
                     filteredFilms.map(film => `
-                        <div class="film-item glass" data-film-id="${film.id}">
+                        <div class="film-item glass fade-in" data-film-id="${film.id}">
                             <img src="${film.poster}" alt="${film.title}" class="film-item-poster" onerror="handleImageError(this)">
-                            <div class="film-item-content">
-                                <div class="film-item-header">
-                                    <h3 class="film-item-title">${film.title}</h3>
-                                    <div class="film-item-year">${film.year} • ${film.genreForScore || 'Общая'}</div>
-                                </div>
+                            <div class="film-item-info">
+                                <div class="film-item-title">${film.title}</div>
+                                <div class="film-item-year">${film.year}</div>
                                 <div class="film-item-score">
-                                    <div class="film-item-total">${film.totalScore}</div>
-                                    <div class="film-item-personal">Личное: ${film.personalRating}</div>
+                                    <span>⭐ ${film.totalScore}</span>
+                                    ${film.personalRating ? `<span>• ♥ ${film.personalRating}</span>` : ''}
                                 </div>
                                 <div class="film-item-actions">
                                     <button class="delete-btn">
