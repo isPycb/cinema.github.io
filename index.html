@@ -162,7 +162,7 @@
             box-shadow: 0 0 0 3px rgba(123, 104, 238, 0.2);
         }
 
-        #search-film-btn, #test-search-btn {
+        #search-film-btn {
             padding: 1rem 1.5rem;
             background: var(--bg-gradient);
             color: white;
@@ -171,14 +171,6 @@
             font-weight: 600;
             cursor: pointer;
             white-space: nowrap;
-        }
-
-        #test-search-btn {
-            background: var(--success);
-        }
-
-        #test-search-btn:hover {
-            background: #3daa5f;
         }
 
         /* Main Content Styles */
@@ -210,6 +202,7 @@
             width: 100%;
             height: 280px;
             object-fit: cover;
+            background: linear-gradient(45deg, var(--bg-secondary), var(--border-color));
         }
 
         .film-info {
@@ -267,6 +260,7 @@
             object-fit: cover;
             border-radius: 12px;
             box-shadow: var(--shadow);
+            background: linear-gradient(45deg, var(--bg-secondary), var(--border-color));
         }
 
         .film-details {
@@ -481,6 +475,7 @@
             width: 100%;
             height: 200px;
             object-fit: cover;
+            background: linear-gradient(45deg, var(--bg-secondary), var(--border-color));
         }
 
         .film-item-content {
@@ -648,6 +643,34 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
+        .search-suggestions {
+            position: absolute;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            width: calc(100% - 130px);
+            margin-top: 0.5rem;
+            box-shadow: var(--shadow);
+        }
+
+        .suggestion-item {
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .suggestion-item:hover {
+            background: var(--accent-primary);
+            color: white;
+        }
+
+        .suggestion-item:last-child {
+            border-bottom: none;
+        }
     </style>
 </head>
 <body>
@@ -666,7 +689,6 @@
                 <div class="search-container">
                     <input type="text" id="film-input" placeholder="Введите название фильма...">
                     <button id="search-film-btn">Поиск</button>
-                    <button id="test-search-btn">Тест</button>
                 </div>
             </div>
         </div>
@@ -707,8 +729,10 @@
     <script>
         // Глобальная функция для обработки ошибок изображений
         function handleImageError(img) {
-            img.src = 'https://via.placeholder.com/300x450/333/fff?text=No+Image';
+            console.log('Ошибка загрузки изображения:', img.src);
+            img.src = 'https://via.placeholder.com/300x450/333/fff?text=Постер+не+найден';
             img.onerror = null;
+            img.style.background = 'linear-gradient(45deg, #667eea, #764ba2)';
         }
 
         // Основной модуль приложения
@@ -728,7 +752,6 @@
                 themeToggle: document.getElementById('theme-toggle'),
                 filmInput: document.getElementById('film-input'),
                 searchFilmBtn: document.getElementById('search-film-btn'),
-                testSearchBtn: document.getElementById('test-search-btn'),
                 searchResults: document.getElementById('search-results'),
                 addFormContainer: document.getElementById('add-form-container'),
                 genreFilter: document.getElementById('genre-filter'),
@@ -739,6 +762,7 @@
             let films = [];
             let currentFilm = null;
             let searchTimeout = null;
+            let allFilmsCache = [];
 
             // Инициализация приложения
             function init() {
@@ -747,7 +771,20 @@
                 renderFilmList();
                 updateThemeButton();
                 
-                console.log('Приложение инициализировано');
+                // Предзагрузка популярных фильмов
+                loadPopularFilms();
+            }
+
+            // Загрузка популярных фильмов для быстрого поиска
+            async function loadPopularFilms() {
+                try {
+                    const popularFilms = await getKinopoiskFilms('популярные');
+                    allFilmsCache = popularFilms;
+                    console.log('Загружено популярных фильмов:', popularFilms.length);
+                } catch (error) {
+                    console.log('Используем демо-базу фильмов');
+                    allFilmsCache = getDemoFilms('');
+                }
             }
 
             // Настройка обработчиков событий
@@ -757,18 +794,14 @@
 
                 // Поиск фильмов
                 elements.searchFilmBtn.addEventListener('click', handleFilmSearch);
-                elements.testSearchBtn.addEventListener('click', () => {
-                    elements.filmInput.value = 'Матрица';
-                    handleFilmSearch();
-                });
                 
                 elements.filmInput.addEventListener('input', function(e) {
                     clearTimeout(searchTimeout);
                     searchTimeout = setTimeout(() => {
-                        if (e.target.value.trim().length > 2) {
+                        if (e.target.value.trim().length > 1) {
                             handleFilmSearch();
                         }
-                    }, 500);
+                    }, 300);
                 });
                 
                 elements.filmInput.addEventListener('keypress', (e) => {
@@ -786,29 +819,139 @@
                 document.addEventListener('click', handleDynamicClick);
             }
 
-            // Функция поиска фильмов
+            // Функция поиска фильмов с учетом опечаток
             async function searchFilms(query) {
-                if (!query || query.length < 2) return [];
+                if (!query || query.length < 1) return [];
                 
                 console.log('Поиск фильмов:', query);
                 
-                // Имитация задержки API
-                await new Promise(resolve => setTimeout(resolve, 800));
-                
-                // Возвращаем демо-данные
-                return getDemoFilms(query);
+                try {
+                    // Сначала пробуем API Кинопоиска
+                    const apiResults = await getKinopoiskFilms(query);
+                    if (apiResults.length > 0) {
+                        return apiResults;
+                    }
+                    
+                    // Если API не ответил, ищем в кэше с учетом опечаток
+                    return searchInCacheWithTypos(query);
+                    
+                } catch (error) {
+                    console.log('Поиск через API не удался, используем кэш:', error);
+                    return searchInCacheWithTypos(query);
+                }
             }
 
-            // Демо-база фильмов
-            function getDemoFilms(query) {
-                const demoDatabase = [
+            // Поиск в кэше с учетом опечаток
+            function searchInCacheWithTypos(query) {
+                const searchTerm = query.toLowerCase().trim();
+                
+                return allFilmsCache.filter(film => {
+                    const title = film.title.toLowerCase();
+                    const altTitle = film.original_title?.toLowerCase() || '';
+                    const description = film.description.toLowerCase();
+                    const genre = film.genre.toLowerCase();
+                    
+                    // Простой поиск
+                    if (title.includes(searchTerm) || 
+                        altTitle.includes(searchTerm) || 
+                        description.includes(searchTerm) ||
+                        genre.includes(searchTerm)) {
+                        return true;
+                    }
+                    
+                    // Поиск с учетом опечаток (Levenshtein distance)
+                    const words = searchTerm.split(' ');
+                    for (const word of words) {
+                        if (word.length > 2) {
+                            if (levenshteinDistance(title, word) <= 2 ||
+                                levenshteinDistance(altTitle, word) <= 2) {
+                                return true;
+                            }
+                        }
+                    }
+                    
+                    return false;
+                });
+            }
+
+            // Расстояние Левенштейна для поиска с опечатками
+            function levenshteinDistance(a, b) {
+                const matrix = [];
+                for (let i = 0; i <= b.length; i++) {
+                    matrix[i] = [i];
+                }
+                for (let j = 0; j <= a.length; j++) {
+                    matrix[0][j] = j;
+                }
+                for (let i = 1; i <= b.length; i++) {
+                    for (let j = 1; j <= a.length; j++) {
+                        if (b.charAt(i - 1) === a.charAt(j - 1)) {
+                            matrix[i][j] = matrix[i - 1][j - 1];
+                        } else {
+                            matrix[i][j] = Math.min(
+                                matrix[i - 1][j - 1] + 1,
+                                matrix[i][j - 1] + 1,
+                                matrix[i - 1][j] + 1
+                            );
+                        }
+                    }
+                }
+                return matrix[b.length][a.length];
+            }
+
+            // API Кинопоиска
+            async function getKinopoiskFilms(query) {
+                const API_KEY = 'TWEWJGW-8X2MX1G-G5QK9NT-6C6S3FT';
+                
+                try {
+                    // Используем прокси для обхода CORS
+                    const proxyUrl = 'https://corsproxy.io/?';
+                    const apiUrl = `https://api.kinopoisk.dev/v1.4/movie/search?page=1&limit=20&query=${encodeURIComponent(query)}`;
+                    
+                    const response = await fetch(proxyUrl + encodeURIComponent(apiUrl), {
+                        method: 'GET',
+                        headers: {
+                            'X-API-KEY': API_KEY,
+                            'Accept': 'application/json',
+                        }
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
+                    
+                    return data.docs.map(film => ({
+                        id: film.id,
+                        title: film.name || film.alternativeName || 'Без названия',
+                        original_title: film.alternativeName,
+                        year: film.year || 'Неизвестно',
+                        genre: film.genres ? film.genres.map(g => g.name).join(', ') : 'Неизвестно',
+                        poster: film.poster?.url || film.poster?.previewUrl || `https://st.kp.yandex.net/images/film_iphone/iphone360_${film.id}.jpg`,
+                        description: film.description || 'Описание отсутствует',
+                        rating: film.rating ? (film.rating.kp || film.rating.imdb || 'Нет оценки') : 'Нет оценки',
+                        countries: film.countries ? film.countries.map(c => c.name).join(', ') : '',
+                        movieLength: film.movieLength,
+                        ageRating: film.ageRating
+                    }));
+                    
+                } catch (error) {
+                    console.log('Ошибка API Кинопоиска:', error);
+                    throw error;
+                }
+            }
+
+            // Демо-база фильмов с реальными постерами
+            function getDemoFilms() {
+                return [
                     {
                         id: 1,
                         title: "Матрица",
                         year: 1999,
                         genre: "фантастика, боевик",
-                        poster: "https://via.placeholder.com/300x450/667eea/ffffff?text=Матрица",
-                        description: "Хакер Нео узнает, что его мир — виртуальная реальность, созданная машинами. Он присоединяется к повстанцам, чтобы сражаться против системы.",
+                        poster: "https://st.kp.yandex.net/images/film_iphone/iphone360_301.jpg",
+                        description: "Хакер Нео узнает, что его мир — виртуальная реальность, созданная машинами.",
                         rating: 8.7,
                         countries: "США, Австралия",
                         movieLength: 136
@@ -818,8 +961,8 @@
                         title: "Криминальное чтиво",
                         year: 1994,
                         genre: "криминал, драма",
-                        poster: "https://via.placeholder.com/300x450/764ba2/ffffff?text=Криминальное+чтиво",
-                        description: "Несколько связанных историй из жизни бандитов и наемных убийц. Культовый фильм Квентина Тарантино с непредсказуемым сюжетом.",
+                        poster: "https://st.kp.yandex.net/images/film_iphone/iphone360_342.jpg",
+                        description: "Несколько связанных историй из жизни бандитов и наемных убийц.",
                         rating: 8.6,
                         countries: "США",
                         movieLength: 154
@@ -829,8 +972,8 @@
                         title: "Побег из Шоушенка",
                         year: 1994,
                         genre: "драма",
-                        poster: "https://via.placeholder.com/300x450/50c878/ffffff?text=Побег+из+Шоушенка",
-                        description: "Банкир Энди Дюфрейн обвинен в убийстве собственной жены и ее любовника. Оказавшись в тюрьме под названием Шоушенк, он сталкивается с жестокостью и беззаконием.",
+                        poster: "https://st.kp.yandex.net/images/film_iphone/iphone360_326.jpg",
+                        description: "Банкир Энди Дюфрейн обвинен в убийстве собственной жены и ее любовника.",
                         rating: 9.1,
                         countries: "США",
                         movieLength: 142
@@ -840,7 +983,7 @@
                         title: "Форрест Гамп",
                         year: 1994,
                         genre: "драма, комедия",
-                        poster: "https://via.placeholder.com/300x450/ff6b6b/ffffff?text=Форрест+Гамп",
+                        poster: "https://st.kp.yandex.net/images/film_iphone/iphone360_448.jpg",
                         description: "От лица главного героя Форреста Гампа, человека с низким IQ, рассказывается история его необыкновенной жизни.",
                         rating: 8.8,
                         countries: "США",
@@ -851,8 +994,8 @@
                         title: "Начало",
                         year: 2010,
                         genre: "фантастика, боевик",
-                        poster: "https://via.placeholder.com/300x450/3b82f6/ffffff?text=Начало",
-                        description: "Дом Кобб – искусный вор, лучший из лучших в опасном искусстве извлечения: он крадет ценные секреты из глубин подсознания во время сна.",
+                        poster: "https://st.kp.yandex.net/images/film_iphone/iphone360_447301.jpg",
+                        description: "Дом Кобб – искусный вор, лучший из лучших в опасном искусстве извлечения.",
                         rating: 8.7,
                         countries: "США, Великобритания",
                         movieLength: 148
@@ -862,28 +1005,42 @@
                         title: "Интерстеллар",
                         year: 2014,
                         genre: "фантастика, драма",
-                        poster: "https://via.placeholder.com/300x450/9f2b68/ffffff?text=Интерстеллар",
+                        poster: "https://st.kp.yandex.net/images/film_iphone/iphone360_258687.jpg",
                         description: "Когда засуха приводит человечество к продовольственному кризису, коллектив исследователей и ученых отправляется сквозь червоточину.",
                         rating: 8.6,
                         countries: "США, Великобритания",
                         movieLength: 169
+                    },
+                    {
+                        id: 7,
+                        title: "Зеленая миля",
+                        year: 1999,
+                        genre: "драма, фэнтези",
+                        poster: "https://st.kp.yandex.net/images/film_iphone/iphone360_435.jpg",
+                        description: "Пол Эджкомб — начальник блока смертников в тюрьме «Холодная гора», каждый из узников которого однажды проходит «зеленую милю» по пути к месту казни.",
+                        rating: 9.1,
+                        countries: "США",
+                        movieLength: 189
+                    },
+                    {
+                        id: 8,
+                        title: "Список Шиндлера",
+                        year: 1993,
+                        genre: "драма, история",
+                        poster: "https://st.kp.yandex.net/images/film_iphone/iphone360_527.jpg",
+                        description: "История немецкого промышленника, спасшего жизни тысяч евреев во время Холокоста.",
+                        rating: 8.8,
+                        countries: "США",
+                        movieLength: 195
                     }
                 ];
-                
-                const searchTerm = query.toLowerCase();
-                return demoDatabase.filter(film => 
-                    film.title.toLowerCase().includes(searchTerm) ||
-                    film.genre.toLowerCase().includes(searchTerm) ||
-                    film.description.toLowerCase().includes(searchTerm)
-                );
             }
 
             // Обработка поиска фильмов
             async function handleFilmSearch() {
                 const query = elements.filmInput.value.trim();
-                console.log('Поиск запроса:', query);
                 
-                if (!query || query.length < 2) {
+                if (!query || query.length < 1) {
                     elements.searchResults.classList.add('hidden');
                     return;
                 }
@@ -899,13 +1056,12 @@
 
                 try {
                     const results = await searchFilms(query);
-                    console.log('Найдено фильмов:', results.length);
                     
                     if (results.length === 0) {
                         elements.searchResults.innerHTML = `
                             <div style="grid-column: 1 / -1; text-align: center; padding: 2rem;">
                                 <p>Фильмы не найдены для "${query}"</p>
-                                <p style="font-size: 0.9rem; margin-top: 0.5rem;">Попробуйте: "Матрица", "Криминальное чтиво", "Начало"</p>
+                                <p style="font-size: 0.9rem; margin-top: 0.5rem;">Попробуйте другой запрос или проверьте написание</p>
                             </div>
                         `;
                     } else {
@@ -916,6 +1072,7 @@
                     elements.searchResults.innerHTML = `
                         <div style="grid-column: 1 / -1; text-align: center; padding: 2rem;">
                             <p>Ошибка поиска. Попробуйте позже.</p>
+                            <p style="font-size: 0.9rem; margin-top: 0.5rem;">${error.message}</p>
                         </div>
                     `;
                 }
@@ -968,12 +1125,28 @@
             // Выбор фильма из результатов поиска
             async function selectFilmFromSearch(filmId) {
                 try {
-                    const results = await searchFilms('');
-                    const selectedFilm = results.find(film => film.id == filmId);
+                    // Ищем фильм в результатах поиска
+                    const searchResults = Array.from(elements.searchResults.querySelectorAll('.film-result'));
+                    const selectedElement = searchResults.find(el => el.dataset.filmId === filmId);
                     
-                    if (selectedFilm) {
-                        currentFilm = selectedFilm;
-                        renderAddForm(selectedFilm);
+                    if (selectedElement) {
+                        const title = selectedElement.querySelector('.film-title').textContent;
+                        const year = selectedElement.querySelector('.film-year').textContent;
+                        const genre = selectedElement.querySelector('.film-genre').textContent;
+                        const poster = selectedElement.querySelector('.film-poster').src;
+                        const rating = selectedElement.querySelector('.film-rating')?.textContent || '';
+                        
+                        currentFilm = {
+                            id: filmId,
+                            title: title,
+                            year: year,
+                            genre: genre,
+                            poster: poster,
+                            rating: rating.replace('⭐ ', ''),
+                            description: 'Описание загружается...'
+                        };
+                        
+                        renderAddForm(currentFilm);
                         elements.searchResults.classList.add('hidden');
                     }
                 } catch (error) {
@@ -992,15 +1165,12 @@
                                  onerror="handleImageError(this)">
                             <div class="film-details">
                                 <h2 class="selected-title">${film.title}</h2>
-                                ${film.original_title ? `<div style="color: var(--text-secondary); margin-bottom: 0.5rem;">${film.original_title}</div>` : ''}
                                 <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem;">
                                     <span class="selected-genre">${film.genre}</span>
-                                    <span class="selected-genre">${film.year} год</span>
+                                    <span class="selected-genre">${film.year}</span>
                                     ${film.rating ? `<span class="selected-genre">⭐ ${film.rating}</span>` : ''}
                                 </div>
                                 <p class="selected-description">${film.description}</p>
-                                ${film.countries ? `<div style="margin-top: 0.5rem;"><strong>Страны:</strong> ${film.countries}</div>` : ''}
-                                ${film.movieLength ? `<div style="margin-top: 0.3rem;"><strong>Длительность:</strong> ${film.movieLength} мин.</div>` : ''}
                             </div>
                         </div>
 
