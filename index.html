@@ -5,10 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>КиноVISION | Умный кинокритик</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <style>
         :root {
             --bg-primary: #0a0a14;
@@ -551,7 +547,7 @@
             border-radius: 50%;
             background: var(--accent-primary);
             opacity: 0.05;
-            filter: blur(80px);
+            filter: blur(80px;
             z-index: -1;
         }
 
@@ -599,91 +595,6 @@
             align-items: center;
             justify-content: center;
         }
-
-        /* Стили для формы аутентификации */
-        .auth-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 60vh;
-        }
-
-        .auth-form {
-            background: var(--bg-card);
-            padding: 2rem;
-            border-radius: 16px;
-            width: 100%;
-            max-width: 400px;
-            box-shadow: var(--shadow);
-        }
-
-        .auth-form h2 {
-            text-align: center;
-            margin-bottom: 1.5rem;
-            background: var(--bg-gradient);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .auth-form input {
-            width: 100%;
-            padding: 1rem;
-            margin-bottom: 1rem;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            background: var(--bg-secondary);
-            color: var(--text-primary);
-        }
-
-        .auth-form button {
-            width: 100%;
-            padding: 1rem;
-            background: var(--bg-gradient);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-        }
-
-        .auth-form .auth-switch {
-            text-align: center;
-            margin-top: 1rem;
-            color: var(--text-secondary);
-        }
-
-        .auth-form .auth-switch a {
-            color: var(--accent-primary);
-            cursor: pointer;
-            text-decoration: underline;
-        }
-
-        .auth-error {
-            color: var(--danger);
-            text-align: center;
-            margin-bottom: 1rem;
-        }
-
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            margin-left: auto;
-        }
-
-        .user-email {
-            color: var(--text-secondary);
-        }
-
-        .logout-btn {
-            background: var(--danger);
-            color: white;
-            border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 8px;
-            cursor: pointer;
-        }
     </style>
 </head>
 <body>
@@ -695,11 +606,7 @@
             <div class="header-content">
                 <h1 class="app-title"><i class="fas fa-film"></i>КиноVISION</h1>
                 <button class="theme-toggle" id="theme-toggle"></button>
-                <div id="user-info" class="user-info hidden">
-                    <span class="user-email" id="user-email"></span>
-                    <button class="logout-btn" id="logout-btn">Выйти</button>
-                </div>
-                <div class="search-container hidden" id="search-container">
+                <div class="search-container">
                     <input type="text" id="film-input" placeholder="Введите название фильма...">
                     <button id="search-film-btn">Поиск</button>
                     <div class="search-suggestions" id="search-suggestions"></div>
@@ -709,34 +616,6 @@
     </header>
 
     <main class="container">
-        <div id="auth-container" class="auth-container">
-            <div class="auth-form glass">
-                <h2>Вход в КиноVISION</h2>
-                <div id="auth-error" class="auth-error hidden"></div>
-                <form id="login-form">
-                    <input type="email" id="login-email" placeholder="Email" required>
-                    <input type="password" id="login-password" placeholder="Пароль" required>
-                    <button type="submit">Войти</button>
-                </form>
-                <div class="auth-switch">
-                    Нет аккаунта? <a id="show-register">Зарегистрироваться</a>
-                </div>
-            </div>
-
-            <div class="auth-form glass hidden" id="register-form">
-                <h2>Регистрация</h2>
-                <div id="register-error" class="auth-error hidden"></div>
-                <form id="signup-form">
-                    <input type="email" id="register-email" placeholder="Email" required>
-                    <input type="password" id="register-password" placeholder="Пароль (минимум 6 символов)" required>
-                    <button type="submit">Зарегистрироваться</button>
-                </form>
-                <div class="auth-switch">
-                    Уже есть аккаунт? <a id="show-login">Войти</a>
-                </div>
-            </div>
-        </div>
-
         <section class="search-results hidden" id="search-results"></section>
         
         <section class="add-form-container hidden" id="add-form-container">
@@ -750,7 +629,7 @@
             </div>
         </section>
         
-        <section class="films-section hidden" id="films-section">
+        <section class="films-section">
             <div class="films-controls">
                 <h2 class="section-title">Моя киноколлекция</h2>
                 <select class="genre-filter" id="genre-filter">
@@ -789,22 +668,6 @@
     </div>
 
     <script>
-        // Конфигурация Firebase
-        const firebaseConfig = {
-            apiKey: "AIzaSyAgpmENDau8Vs-IZglI1TLsuFwbAhga28k",
-            authDomain: "films-e77cd.firebaseapp.com",
-            projectId: "films-e77cd",
-            storageBucket: "films-e77cd.firebasestorage.app",
-            messagingSenderId: "813004407817",
-            appId: "1:813004407817:web:2b783bf7ed3b849ee7e4d8",
-            measurementId: "G-CWNFTD2DF6"
-        };
-
-        // Инициализация Firebase
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-        const auth = firebase.auth();
-
         const KINOPOISK_API = {
             BASE_URL: 'https://api.kinopoisk.dev/v1.4',
             API_KEY: 'TWEWJGW-8X2MX1G-G5QK9NT-6C6S3FT'
@@ -858,52 +721,17 @@
                 filmsContainer: document.getElementById('films-container'),
                 filmModal: document.getElementById('film-modal'),
                 modalClose: document.getElementById('modal-close'),
-                modalContent: document.getElementById('modal-content'),
-                authContainer: document.getElementById('auth-container'),
-                loginForm: document.getElementById('login-form'),
-                signupForm: document.getElementById('signup-form'),
-                showRegister: document.getElementById('show-register'),
-                showLogin: document.getElementById('show-login'),
-                registerForm: document.getElementById('register-form'),
-                authError: document.getElementById('auth-error'),
-                registerError: document.getElementById('register-error'),
-                userInfo: document.getElementById('user-info'),
-                userEmail: document.getElementById('user-email'),
-                logoutBtn: document.getElementById('logout-btn'),
-                searchContainer: document.getElementById('search-container'),
-                filmsSection: document.getElementById('films-section')
+                modalContent: document.getElementById('modal-content')
             };
 
             let films = [];
             let currentFilm = null;
             let lastSearchResults = [];
-            let currentUser = null;
 
             function init() {
+                loadFromLocalStorage();
                 setupEventListeners();
-                setupAuthStateListener();
-            }
-
-            function setupAuthStateListener() {
-                auth.onAuthStateChanged((user) => {
-                    if (user) {
-                        currentUser = user;
-                        elements.userEmail.textContent = user.email;
-                        elements.userInfo.classList.remove('hidden');
-                        elements.searchContainer.classList.remove('hidden');
-                        elements.filmsSection.classList.remove('hidden');
-                        elements.authContainer.classList.add('hidden');
-                        loadFilmsFromFirestore();
-                    } else {
-                        currentUser = null;
-                        elements.userInfo.classList.add('hidden');
-                        elements.searchContainer.classList.add('hidden');
-                        elements.filmsSection.classList.add('hidden');
-                        elements.authContainer.classList.remove('hidden');
-                        films = [];
-                        renderFilmList();
-                    }
-                });
+                renderFilmList();
             }
 
             function setupEventListeners() {
@@ -937,63 +765,6 @@
                         closeModal();
                     }
                 });
-
-                // Аутентификация
-                elements.loginForm.addEventListener('submit', handleLogin);
-                elements.signupForm.addEventListener('submit', handleSignUp);
-                elements.showRegister.addEventListener('click', showRegisterForm);
-                elements.showLogin.addEventListener('click', showLoginForm);
-                elements.logoutBtn.addEventListener('click', handleLogout);
-            }
-
-            function showLoginForm() {
-                elements.registerForm.classList.add('hidden');
-                elements.loginForm.parentElement.classList.remove('hidden');
-                elements.authError.classList.add('hidden');
-                elements.registerError.classList.add('hidden');
-            }
-
-            function showRegisterForm() {
-                elements.loginForm.parentElement.classList.add('hidden');
-                elements.registerForm.classList.remove('hidden');
-                elements.authError.classList.add('hidden');
-                elements.registerError.classList.add('hidden');
-            }
-
-            function handleLogin(e) {
-                e.preventDefault();
-                const email = document.getElementById('login-email').value;
-                const password = document.getElementById('login-password').value;
-                
-                auth.signInWithEmailAndPassword(email, password)
-                    .then((userCredential) => {
-                        // Успешный вход
-                        elements.authError.classList.add('hidden');
-                    })
-                    .catch((error) => {
-                        elements.authError.textContent = error.message;
-                        elements.authError.classList.remove('hidden');
-                    });
-            }
-
-            function handleSignUp(e) {
-                e.preventDefault();
-                const email = document.getElementById('register-email').value;
-                const password = document.getElementById('register-password').value;
-                
-                auth.createUserWithEmailAndPassword(email, password)
-                    .then((userCredential) => {
-                        // Успешная регистрация
-                        elements.registerError.classList.add('hidden');
-                    })
-                    .catch((error) => {
-                        elements.registerError.textContent = error.message;
-                        elements.registerError.classList.remove('hidden');
-                    });
-            }
-
-            function handleLogout() {
-                auth.signOut();
             }
 
             function closeModal() {
@@ -1075,7 +846,9 @@
 
             function deleteFilmFromModal(filmId) {
                 if (confirm('Удалить фильм из коллекции?')) {
-                    deleteFilmFromFirestore(filmId);
+                    films = films.filter(film => film.id !== filmId);
+                    saveToLocalStorage();
+                    renderFilmList();
                     closeModal();
                 }
             }
@@ -1205,7 +978,7 @@
                 else if (e.target.closest('.delete-btn')) {
                     e.stopPropagation();
                     const filmId = e.target.closest('.film-item').dataset.filmId;
-                    deleteFilmFromFirestore(filmId);
+                    deleteFilm(filmId);
                 }
             }
 
@@ -1411,64 +1184,19 @@
                     createdAt: new Date().toISOString()
                 };
 
-                saveFilmToFirestore(filmData);
+                const existingIndex = films.findIndex(f => f.id === filmData.id);
+                if (existingIndex >= 0) {
+                    films[existingIndex] = filmData;
+                } else {
+                    films.push(filmData);
+                }
+
+                saveToLocalStorage();
+                renderFilmList();
                 elements.addFormContainer.classList.add('hidden');
             }
 
-            async function saveFilmToFirestore(filmData) {
-                try {
-                    await db.collection('users').doc(currentUser.uid)
-                        .collection('films').doc(filmData.id).set(filmData);
-                    
-                    // Обновляем локальный список фильмов
-                    const existingIndex = films.findIndex(f => f.id === filmData.id);
-                    if (existingIndex >= 0) {
-                        films[existingIndex] = filmData;
-                    } else {
-                        films.push(filmData);
-                    }
-                    
-                    renderFilmList();
-                } catch (error) {
-                    console.error('Ошибка сохранения фильма:', error);
-                    alert('Не удалось сохранить фильм. Проверьте подключение к интернету.');
-                }
-            }
-
-            async function loadFilmsFromFirestore() {
-                try {
-                    const snapshot = await db.collection('users').doc(currentUser.uid)
-                        .collection('films').get();
-                    
-                    films = [];
-                    snapshot.forEach(doc => {
-                        films.push(doc.data());
-                    });
-                    
-                    renderFilmList();
-                } catch (error) {
-                    console.error('Ошибка загрузки фильмов:', error);
-                    alert('Не удалось загрузить фильмы. Проверьте подключение к интернету.');
-                }
-            }
-
-            async function deleteFilmFromFirestore(filmId) {
-                try {
-                    await db.collection('users').doc(currentUser.uid)
-                        .collection('films').doc(filmId).delete();
-                    
-                    // Обновляем локальный список фильмов
-                    films = films.filter(film => film.id !== filmId);
-                    renderFilmList();
-                } catch (error) {
-                    console.error('Ошибка удаления фильма:', error);
-                    alert('Не удалось удалить фильм. Проверьте подключение к интернету.');
-                }
-            }
-
             function renderFilmList() {
-                if (!currentUser) return;
-                
                 const selectedGenre = elements.genreFilter.value;
                 const sortBy = elements.sortSelect.value;
                 
@@ -1526,10 +1254,30 @@
                     '<div style="grid-column: 1 / -1; text-align: center; padding: 3rem;">Ваша коллекция пуста</div>';
             }
 
+            function deleteFilm(filmId) {
+                if (confirm('Удалить фильм из коллекции?')) {
+                    films = films.filter(film => film.id !== filmId);
+                    saveToLocalStorage();
+                    renderFilmList();
+                }
+            }
+
             function toggleTheme() {
                 const isDark = document.documentElement.getAttribute('data-theme') === 'light';
                 document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
                 localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            }
+
+            function saveToLocalStorage() {
+                localStorage.setItem('filmRatings', JSON.stringify(films));
+            }
+
+            function loadFromLocalStorage() {
+                const saved = localStorage.getItem('filmRatings');
+                if (saved) films = JSON.parse(saved);
+                
+                const theme = localStorage.getItem('theme');
+                if (theme) document.documentElement.setAttribute('data-theme', theme);
             }
 
             // Публичные методы для глобального доступа
@@ -1547,3 +1295,6 @@
     </script>
 </body>
 </html>
+
+
+
