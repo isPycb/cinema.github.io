@@ -855,6 +855,54 @@
         .trailer-source-btn:hover {
             background: var(--accent-primary);
         }
+        
+        /* Стили для встроенного видеоплеера */
+        .video-player-container {
+            position: relative;
+            width: 100%;
+            padding-bottom: 56.25%; /* 16:9 aspect ratio */
+            height: 0;
+            overflow: hidden;
+            border-radius: 12px;
+            margin: 1.5rem 0;
+            display: none;
+        }
+        
+        .video-player-container.active {
+            display: block;
+        }
+        
+        .video-player-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        
+        .player-controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .player-control-btn {
+            padding: 8px 15px;
+            background: var(--accent-primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .player-control-btn:hover {
+            background: var(--accent-secondary);
+        }
     </style>
 </head>
 <body>
@@ -936,28 +984,33 @@
         const TRAILERS_DB = {
             // Кинопоиск (используем официальные трейлеры)
             '535341': { // Человек-паук: Нет пути домой
-                vk: 'https://vk.com/video_ext.php?oid=-2000412666&id=456240291',
-                ok: 'https://ok.ru/video/3053188797241',
+                vk: '456240291',
+                vk_oid: '-2000412666',
+                ok: '3053188797241',
                 kp: 'https://www.kinopoisk.ru/film/535341/video/159663/'
             },
             '1143242': { // Дюна
-                vk: 'https://vk.com/video_ext.php?oid=-2000412666&id=456240292',
-                ok: 'https://ok.ru/video/3053188797242', 
+                vk: '456240292',
+                vk_oid: '-2000412666',
+                ok: '3053188797242', 
                 kp: 'https://www.kinopoisk.ru/film/1143242/video/174558/'
             },
             '1318972': { // Бэтмен
-                vk: 'https://vk.com/video_ext.php?oid=-2000412666&id=456240293',
-                ok: 'https://ok.ru/video/3053188797243',
+                vk: '456240293',
+                vk_oid: '-2000412666',
+                ok: '3053188797243',
                 kp: 'https://www.kinopoisk.ru/film/1318972/video/180991/'
             },
             '1339594': { // Тор: Любовь и гром
-                vk: 'https://vk.com/video_ext.php?oid=-2000412666&id=456240294',
-                ok: 'https://ok.ru/video/3053188797244',
+                vk: '456240294',
+                vk_oid: '-2000412666',
+                ok: '3053188797244',
                 kp: 'https://www.kinopoisk.ru/film/1339594/video/186496/'
             },
             '1267348': { // Топ Ган: Мэверик
-                vk: 'https://vk.com/video_ext.php?oid=-2000412666&id=456240295',
-                ok: 'https://ok.ru/video/3053188797245',
+                vk: '456240295',
+                vk_oid: '-2000412666',
+                ok: '3053188797245',
                 kp: 'https://www.kinopoisk.ru/film/1267348/video/182773/'
             }
         };
@@ -1018,6 +1071,7 @@
             let activeModalFilmId = null;
             let isEditMode = false;
             let trailerUrl = null;
+            let videoPlayer = null;
 
             function init() {
                 loadFromLocalStorage();
@@ -1091,13 +1145,26 @@
                         </div>
                     </div>
                     
+                    <div class="video-player-container" id="video-player-container">
+                        <iframe id="video-player" frameborder="0" allowfullscreen></iframe>
+                    </div>
+                    
                     <div class="trailer-container" id="trailer-container">
                         <div class="no-trailer">
                             <i class="fas fa-film" style="font-size: 2rem; margin-bottom: 0.5rem;"></i>
-                            <span>Нажмите "Трейлер" для поиска</span>
+                            <span>Нажмите "Трейлер" для просмотра</span>
                         </div>
-                        <button class="fullscreen-btn" id="fullscreen-btn" style="display: none;">
-                            <i class="fas fa-expand"></i>
+                    </div>
+                    
+                    <div class="player-controls" id="player-controls" style="display: none;">
+                        <button class="player-control-btn" id="play-btn">
+                            <i class="fas fa-play"></i> Воспроизвести
+                        </button>
+                        <button class="player-control-btn" id="pause-btn">
+                            <i class="fas fa-pause"></i> Пауза
+                        </button>
+                        <button class="player-control-btn" id="fullscreen-btn">
+                            <i class="fas fa-expand"></i> Полный экран
                         </button>
                     </div>
                     
@@ -1173,6 +1240,9 @@
                 document.getElementById('edit-film-btn').addEventListener('click', toggleEditMode);
                 document.getElementById('save-changes-btn').addEventListener('click', saveFilmChanges);
                 document.getElementById('trailer-btn').addEventListener('click', toggleTrailer);
+                document.getElementById('play-btn').addEventListener('click', playVideo);
+                document.getElementById('pause-btn').addEventListener('click', pauseVideo);
+                document.getElementById('fullscreen-btn').addEventListener('click', toggleFullscreen);
                 
                 // Обработчики для полей в режиме редактирования
                 document.getElementById('edit-genre-score').addEventListener('input', (e) => {
@@ -1197,11 +1267,13 @@
             function toggleTrailer() {
                 const trailerContainer = document.getElementById('trailer-container');
                 const trailerLinks = document.getElementById('trailer-links');
-                const fullscreenBtn = document.getElementById('fullscreen-btn');
+                const videoPlayerContainer = document.getElementById('video-player-container');
+                const playerControls = document.getElementById('player-controls');
                 
-                if (trailerLinks.style.display === 'block') {
+                if (videoPlayerContainer.classList.contains('active')) {
+                    videoPlayerContainer.classList.remove('active');
+                    playerControls.style.display = 'none';
                     trailerLinks.style.display = 'none';
-                    trailerContainer.classList.remove('active');
                     return;
                 }
                 
@@ -1224,34 +1296,51 @@
                     const trailers = TRAILERS_DB[activeModalFilmId];
                     
                     // Если есть прямой трейлер, показываем его
-                    if (trailers.vk) {
-                        trailerContainer.innerHTML = `
-                            <iframe src="${trailers.vk}" frameborder="0" allowfullscreen></iframe>
-                            <button class="fullscreen-btn" id="fullscreen-btn">
-                                <i class="fas fa-expand"></i>
-                            </button>
-                        `;
-                        trailerContainer.classList.add('active');
-                        fullscreenBtn.style.display = 'block';
-                        
-                        // Добавляем обработчик для кнопки полноэкранного режима
-                        document.getElementById('fullscreen-btn').addEventListener('click', function() {
-                            const iframe = trailerContainer.querySelector('iframe');
-                            if (iframe.requestFullscreen) {
-                                iframe.requestFullscreen();
-                            } else if (iframe.webkitRequestFullscreen) {
-                                iframe.webkitRequestFullscreen();
-                            } else if (iframe.msRequestFullscreen) {
-                                iframe.msRequestFullscreen();
-                            }
-                        });
-                        
+                    if (trailers.vk && trailers.vk_oid) {
+                        const videoPlayer = document.getElementById('video-player');
+                        videoPlayer.src = `https://vk.com/video_ext.php?oid=${trailers.vk_oid}&id=${trailers.vk}&hash=access_hash`;
+                        videoPlayerContainer.classList.add('active');
+                        playerControls.style.display = 'flex';
+                        trailerLinks.style.display = 'block';
                         return;
                     }
                 }
                 
                 // Если прямого трейлера нет, показываем ссылки для поиска
                 trailerLinks.style.display = 'block';
+            }
+
+            function playVideo() {
+                const videoPlayer = document.getElementById('video-player');
+                try {
+                    videoPlayer.contentWindow.postMessage('{"method":"play"}', '*');
+                } catch (e) {
+                    console.error('Ошибка воспроизведения видео:', e);
+                }
+            }
+
+            function pauseVideo() {
+                const videoPlayer = document.getElementById('video-player');
+                try {
+                    videoPlayer.contentWindow.postMessage('{"method":"pause"}', '*');
+                } catch (e) {
+                    console.error('Ошибка при паузе видео:', e);
+                }
+            }
+
+            function toggleFullscreen() {
+                const videoPlayer = document.getElementById('video-player');
+                try {
+                    if (videoPlayer.requestFullscreen) {
+                        videoPlayer.requestFullscreen();
+                    } else if (videoPlayer.webkitRequestFullscreen) {
+                        videoPlayer.webkitRequestFullscreen();
+                    } else if (videoPlayer.msRequestFullscreen) {
+                        videoPlayer.msRequestFullscreen();
+                    }
+                } catch (e) {
+                    console.error('Ошибка перехода в полноэкранный режим:', e);
+                }
             }
 
             function closeModal() {
