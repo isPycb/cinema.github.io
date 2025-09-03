@@ -211,6 +211,7 @@
 
         .film-info {
             padding: 1rem;
+            background: var(--bg-secondary);
         }
 
         .film-title {
@@ -556,48 +557,43 @@
         .shape-2 { bottom: 20%; right: 10%; width: 400px; height: 400px; background: var(--success); }
 
         /* Модальное окно для просмотра оценки - ПЕРЕРАБОТАННОЕ */
-        .modal-container {
-            position: relative;
-            width: 100%;
-        }
-        
         .modal-overlay {
-            position: absolute;
+            position: fixed;
+            top: 0;
             left: 0;
             right: 0;
-            background: transparent;
-            z-index: 100;
-            overflow: hidden;
-            max-height: 0;
-            transition: max-height 0.5s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
         }
         
         .modal-overlay.active {
-            max-height: 1000px;
+            opacity: 1;
+            visibility: visible;
         }
         
         .modal-content {
             background: var(--bg-card);
             border-radius: 16px;
             padding: 1.5rem;
-            width: 100%;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
             position: relative;
-            margin-top: 10px;
+            transform: translateY(20px);
+            transition: transform 0.3s ease;
             box-shadow: var(--shadow);
-            transform: translateY(-20px);
-            opacity: 0;
-            transition: transform 0.3s ease, opacity 0.3s ease;
         }
         
         .modal-overlay.active .modal-content {
             transform: translateY(0);
-            opacity: 1;
-        }
-        
-        .film-item.expanded {
-            transform: scale(1.05);
-            z-index: 101;
-            transition: transform 0.3s ease;
         }
         
         .modal-header {
@@ -860,6 +856,13 @@
         </section>
     </main>
 
+    <!-- Модальное окно -->
+    <div class="modal-overlay" id="film-modal">
+        <div class="modal-content glass">
+            <div id="modal-content"></div>
+        </div>
+    </div>
+
     <script>
         const KINOPOISK_API = {
             BASE_URL: 'https://api.kinopoisk.dev/v1.4',
@@ -925,7 +928,9 @@
                 backToSearchBtn: document.getElementById('back-to-search-btn'),
                 genreFilter: document.getElementById('genre-filter'),
                 sortSelect: document.getElementById('sort-select'),
-                filmsContainer: document.getElementById('films-container')
+                filmsContainer: document.getElementById('films-container'),
+                filmModal: document.getElementById('film-modal'),
+                modalContent: document.getElementById('modal-content')
             };
 
             let films = [];
@@ -965,137 +970,103 @@
                 document.addEventListener('click', handleDynamicClick);
                 document.addEventListener('input', handleDynamicInput);
 
-                // Закрытие модального окна по клику на тот же фильм
-                document.addEventListener('click', (e) => {
-                    if (isEditMode) return; // Не закрываем при редактировании
-                    
-                    if (e.target.closest('.film-item')) {
-                        const filmId = e.target.closest('.film-item').dataset.filmId;
-                        
-                        if (activeModalFilmId === filmId) {
-                            closeModal();
-                        }
+                // Закрытие модального окна по клику вне его
+                elements.filmModal.addEventListener('click', (e) => {
+                    if (e.target === elements.filmModal) {
+                        closeModal();
                     }
                 });
             }
 
-            async function showFilmDetails(filmId) {
+            function showFilmDetails(filmId) {
                 if (activeModalFilmId === filmId) {
                     closeModal();
                     return;
                 }
                 
-                closeModal(); // Закрываем предыдущее модальное окно
-                
                 const film = films.find(f => f.id === filmId);
                 if (!film) return;
 
-                // Находим элемент фильма и его позицию
-                const filmElement = document.querySelector(`.film-item[data-film-id="${filmId}"]`);
-                if (!filmElement) return;
+                activeModalFilmId = filmId;
                 
-                // Добавляем класс для увеличения
-                filmElement.classList.add('expanded');
-                
-                // Создаем контейнер для модального окна, если его нет
-                let modalContainer = filmElement.querySelector('.modal-container');
-                if (!modalContainer) {
-                    modalContainer = document.createElement('div');
-                    modalContainer.className = 'modal-container';
-                    filmElement.appendChild(modalContainer);
-                }
-                
-                // Создаем модальное окно
-                const modal = document.createElement('div');
-                modal.className = 'modal-overlay';
-                modal.id = `modal-${filmId}`;
-                
-                // Вставляем в контейнер
-                modalContainer.appendChild(modal);
-                
-                // Заполняем контентом
-                modal.innerHTML = `
-                    <div class="modal-content glass">
-                        <div class="modal-header">
-                            <div>
-                                <h2 class="modal-title">${film.title} (${film.year})</h2>
-                                <div class="mini-score">
-                                    <div class="mini-score-value">${film.totalScore}</div>
-                                    <div class="mini-score-label">Общая оценка</div>
-                                </div>
-                            </div>
-                            <div class="modal-actions">
-                                <button class="modal-btn trailer-btn" id="trailer-btn">
-                                    <i class="fas fa-play"></i> Трейлер
-                                </button>
-                                <button class="modal-btn edit-btn" id="edit-film-btn">
-                                    <i class="fas fa-edit"></i> 
-                                </button>
-                                <button class="modal-btn close-btn" id="close-modal-btn">
-                                    <i class="fas fa-times"></i> 
-                                </button>
+                // Заполняем модальное окно контентом
+                elements.modalContent.innerHTML = `
+                    <div class="modal-header">
+                        <div>
+                            <h2 class="modal-title">${film.title} (${film.year})</h2>
+                            <div class="mini-score">
+                                <div class="mini-score-value">${film.totalScore}</div>
+                                <div class="mini-score-label">Общая оценка</div>
                             </div>
                         </div>
-                        
-                        <div class="trailer-container" id="trailer-container">
-                            <div class="no-trailer">
-                                <i class="fas fa-film" style="font-size: 2rem; margin-bottom: 0.5rem;"></i>
-                                <span>Трейлер не найден</span>
-                            </div>
-                            <button class="fullscreen-btn" id="fullscreen-btn" style="display: none;">
-                                <i class="fas fa-expand"></i>
+                        <div class="modal-actions">
+                            <button class="modal-btn trailer-btn" id="trailer-btn">
+                                <i class="fas fa-play"></i> Трейлер
+                            </button>
+                            <button class="modal-btn edit-btn" id="edit-film-btn">
+                                <i class="fas fa-edit"></i> 
+                            </button>
+                            <button class="modal-btn close-btn" id="close-modal-btn">
+                                <i class="fas fa-times"></i> 
                             </button>
                         </div>
-                        
-                        <div class="criteria-grid compact">
-                            ${criteriaConfig.map(criterion => `
-                                <div class="criteria-item compact">
-                                    <span class="criteria-name compact">${criterion.name}</span>
-                                    <div class="slider-container">
-                                        <input type="range" class="criteria-slider compact" 
-                                               min="0" max="100" value="${film.ratings[criterion.id] || 50}" 
-                                               step="1" disabled>
-                                        <span class="criteria-value">${film.ratings[criterion.id] || 50}</span>
-                                    </div>
-                                </div>
-                            `).join('')}
+                    </div>
+                    
+                    <div class="trailer-container" id="trailer-container">
+                        <div class="no-trailer">
+                            <i class="fas fa-film" style="font-size: 2rem; margin-bottom: 0.5rem;"></i>
+                            <span>Трейлер не найден</span>
                         </div>
-
-                        <div class="additional-fields compact">
-                            <div class="form-group compact">
-                                <label>Оценка в рамках жанра: ${film.genreScore || 5}/10</label>
+                        <button class="fullscreen-btn" id="fullscreen-btn" style="display: none;">
+                            <i class="fas fa-expand"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="criteria-grid compact">
+                        ${criteriaConfig.map(criterion => `
+                            <div class="criteria-item compact">
+                                <span class="criteria-name compact">${criterion.name}</span>
                                 <div class="slider-container">
-                                    <input type="range" id="edit-genre-score" min="0" max="10" value="${film.genreScore || 5}" step="0.1" disabled>
-                                    <span class="criteria-value" id="edit-genre-score-value">${film.genreScore || 5}</span>
-                                </div>
-                                <small>Жанр: ${film.genreForScore || 'Общая'}</small>
-                            </div>
-
-                            <div class="form-group compact">
-                                <label>Личное впечатление: ${film.personalRating || 50}/100</label>
-                                <div class="slider-container">
-                                    <input type="range" id="edit-personal-rating" min="0" max="100" value="${film.personalRating || 50}" step="1" disabled>
-                                    <span class="criteria-value" id="edit-personal-rating-value">${film.personalRating || 50}</span>
+                                    <input type="range" class="criteria-slider compact" 
+                                           min="0" max="100" value="${film.ratings[criterion.id] || 50}" 
+                                           step="1" disabled>
+                                    <span class="criteria-value">${film.ratings[criterion.id] || 50}</span>
                                 </div>
                             </div>
+                        `).join('')}
+                    </div>
+
+                    <div class="additional-fields compact">
+                        <div class="form-group compact">
+                            <label>Оценка в рамках жанра: ${film.genreScore || 5}/10</label>
+                            <div class="slider-container">
+                                <input type="range" id="edit-genre-score" min="0" max="10" value="${film.genreScore || 5}" step="0.1" disabled>
+                                <span class="criteria-value" id="edit-genre-score-value">${film.genreScore || 5}</span>
+                            </div>
+                            <small>Жанр: ${film.genreForScore || 'Общая'}</small>
                         </div>
 
                         <div class="form-group compact">
-                            <label>Комментарий</label>
-                            <textarea id="edit-comment" class="compact" disabled>${film.comment || ''}</textarea>
+                            <label>Личное впечатление: ${film.personalRating || 50}/100</label>
+                            <div class="slider-container">
+                                <input type="range" id="edit-personal-rating" min="0" max="100" value="${film.personalRating || 50}" step="1" disabled>
+                                <span class="criteria-value" id="edit-personal-rating-value">${film.personalRating || 50}</span>
+                            </div>
                         </div>
-                        
-                        <button class="save-changes-btn" id="save-changes-btn">
-                            <i class="fas fa-save"></i> Сохранить изменения
-                        </button>
                     </div>
+
+                    <div class="form-group compact">
+                        <label>Комментарий</label>
+                        <textarea id="edit-comment" class="compact" disabled>${film.comment || ''}</textarea>
+                    </div>
+                    
+                    <button class="save-changes-btn" id="save-changes-btn">
+                        <i class="fas fa-save"></i> Сохранить изменения
+                    </button>
                 `;
                 
-                // Активируем модальное окно
-                setTimeout(() => {
-                    modal.classList.add('active');
-                    activeModalFilmId = filmId;
-                }, 10);
+                // Показываем модальное окно
+                elements.filmModal.classList.add('active');
                 
                 // Добавляем обработчики для модального окна
                 document.getElementById('close-modal-btn').addEventListener('click', closeModal);
@@ -1123,7 +1094,7 @@
                 });
             }
 
-            async function toggleTrailer() {
+            function toggleTrailer() {
                 const trailerContainer = document.getElementById('trailer-container');
                 const fullscreenBtn = document.getElementById('fullscreen-btn');
                 
@@ -1186,25 +1157,7 @@
             }
 
             function closeModal() {
-                if (!activeModalFilmId) return;
-                
-                const modal = document.getElementById(`modal-${activeModalFilmId}`);
-                if (modal) {
-                    modal.classList.remove('active');
-                    
-                    setTimeout(() => {
-                        if (modal.parentNode) {
-                            modal.parentNode.removeChild(modal);
-                        }
-                    }, 500);
-                }
-                
-                // Убираем увеличение с элемента фильма
-                const filmElement = document.querySelector(`.film-item[data-film-id="${activeModalFilmId}"]`);
-                if (filmElement) {
-                    filmElement.classList.remove('expanded');
-                }
-                
+                elements.filmModal.classList.remove('active');
                 activeModalFilmId = null;
                 isEditMode = false;
                 trailerUrl = null;
@@ -1213,7 +1166,7 @@
             function toggleEditMode() {
                 isEditMode = !isEditMode;
                 
-                const modalContent = document.querySelector(`#modal-${activeModalFilmId} .modal-content`);
+                const modalContent = document.querySelector('.modal-content');
                 if (!modalContent) return;
                 
                 if (isEditMode) {
@@ -1277,7 +1230,7 @@
                 toggleEditMode();
                 
                 // Обновляем мини-оценку
-                document.querySelector(`#modal-${activeModalFilmId} .mini-score-value`).textContent = films[filmIndex].totalScore;
+                document.querySelector('.mini-score-value').textContent = films[filmIndex].totalScore;
             }
 
             function cancelFilmSelection() {
@@ -1676,7 +1629,6 @@
                                     </button>
                                 </div>
                             </div>
-                            <div class="modal-container"></div>
                         </div>
                     `).join('') : 
                     '<div style="grid-column: 1 / -1; text-align: center; padding: 3rem;">Ваша коллекция пуста</div>';
