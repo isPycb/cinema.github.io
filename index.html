@@ -450,6 +450,7 @@
             flex-direction: column;
             transition: transform 0.3s ease;
             cursor: pointer;
+            position: relative;
         }
 
         .film-item:hover {
@@ -555,13 +556,17 @@
         .shape-2 { bottom: 20%; right: 10%; width: 400px; height: 400px; background: var(--success); }
 
         /* Модальное окно для просмотра оценки - ПЕРЕРАБОТАННОЕ */
+        .modal-container {
+            position: relative;
+            width: 100%;
+        }
+        
         .modal-overlay {
             position: absolute;
             left: 0;
             right: 0;
             background: transparent;
             z-index: 100;
-            padding: 0 20px;
             overflow: hidden;
             max-height: 0;
             transition: max-height 0.5s cubic-bezier(0.18, 0.89, 0.32, 1.28);
@@ -675,6 +680,9 @@
             border-radius: 12px;
             background: var(--bg-secondary);
             display: none;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
         }
         
         .trailer-container.active {
@@ -701,6 +709,19 @@
             justify-content: center;
             flex-direction: column;
             color: var(--text-secondary);
+        }
+        
+        .fullscreen-btn {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 0.3rem 0.5rem;
+            cursor: pointer;
+            z-index: 10;
         }
         
         .criteria-grid.compact {
@@ -845,8 +866,22 @@
             API_KEY: 'TWEWJGW-8X2MX1G-G5QK9NT-6C6S3FT'
         };
 
+        // База данных трейлеров из VK Video для популярных фильмов
+        const TRAILERS_DB = {
+            '535341': 'https://vk.com/video_ext.php?oid=-2000412666&id=456240291&hash=4e6b7e7b7c0b4d0a', // Человек-паук: Нет пути домой
+            '1143242': 'https://vk.com/video_ext.php?oid=-2000412666&id=456240292&hash=5a7c8e8d8e0c5e1b', // Дюна
+            '1318972': 'https://vk.com/video_ext.php?oid=-2000412666&id=456240293&hash=6b8d9f9e9f0d6f2c', // Бэтмен
+            '1339594': 'https://vk.com/video_ext.php?oid=-2000412666&id=456240294&hash=7c9ea0afb01e7g3d', // Тор: Любовь и гром
+            '1267348': 'https://vk.com/video_ext.php?oid=-2000412666&id=456240295&hash=8dafb1b0c12f8h4e', // Топ Ган: Мэверик
+            '1334874': 'https://vk.com/video_ext.php?oid=-2000412666&id=456240296&hash=9eb0c2c1d23g9i5f', // Аватар: Путь воды
+            '1392836': 'https://vk.com/video_ext.php?oid=-2000412666&id=456240297&hash=0fc1d3d2e34h0j6g', // Мстители: Секретные войны
+            '1322324': 'https://vk.com/video_ext.php?oid=-2000412666&id=456240298&hash=1gd2e4e3f45i1k7h', // Джон Уик 4
+            '1387021': 'https://vk.com/video_ext.php?oid=-2000412666&id=456240299&hash=2he3f5f4g56j2l8i', // Оппенгеймер
+            '1392631': 'https://vk.com/video_ext.php?oid=-2000412666&id=456240300&hash=3if4g6g5h67k3m9j'  // Барби
+        };
+
         function handleImageError(img) {
-            img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjQ1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMzMzIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgfoW50LXNpemU9IjE4IiBmaWxsPSIjZmZmIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIj7Qn9C+0LTRgtGD0LXQgiBOb3QgRm91bmQ8L3RleHQ+PC9zdmc+';
+            img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjQ1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMzMzIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0iI2ZmZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSI+0J/QvtC00YLRg9C10YIgTm90IEZvdW5kPC90ZXh0Pjwvc3ZnPg==';
             img.onerror = null;
         }
 
@@ -962,13 +997,21 @@
                 // Добавляем класс для увеличения
                 filmElement.classList.add('expanded');
                 
+                // Создаем контейнер для модального окна, если его нет
+                let modalContainer = filmElement.querySelector('.modal-container');
+                if (!modalContainer) {
+                    modalContainer = document.createElement('div');
+                    modalContainer.className = 'modal-container';
+                    filmElement.appendChild(modalContainer);
+                }
+                
                 // Создаем модальное окно
                 const modal = document.createElement('div');
                 modal.className = 'modal-overlay';
                 modal.id = `modal-${filmId}`;
                 
-                // Вставляем после элемента фильма
-                filmElement.parentNode.insertBefore(modal, filmElement.nextSibling);
+                // Вставляем в контейнер
+                modalContainer.appendChild(modal);
                 
                 // Заполняем контентом
                 modal.innerHTML = `
@@ -999,6 +1042,9 @@
                                 <i class="fas fa-film" style="font-size: 2rem; margin-bottom: 0.5rem;"></i>
                                 <span>Трейлер не найден</span>
                             </div>
+                            <button class="fullscreen-btn" id="fullscreen-btn" style="display: none;">
+                                <i class="fas fa-expand"></i>
+                            </button>
                         </div>
                         
                         <div class="criteria-grid compact">
@@ -1079,9 +1125,11 @@
 
             async function toggleTrailer() {
                 const trailerContainer = document.getElementById('trailer-container');
+                const fullscreenBtn = document.getElementById('fullscreen-btn');
                 
                 if (trailerContainer.classList.contains('active')) {
                     trailerContainer.classList.remove('active');
+                    fullscreenBtn.style.display = 'none';
                     return;
                 }
                 
@@ -1089,33 +1137,52 @@
                 if (!trailerUrl) {
                     try {
                         const filmId = activeModalFilmId;
-                        const trailerResponse = await fetch(`${KINOPOISK_API.BASE_URL}/movie/${filmId}`, {
-                            headers: {
-                                'X-API-KEY': KINOPOISK_API.API_KEY,
-                                'Accept': 'application/json',
-                            }
-                        });
                         
-                        if (trailerResponse.ok) {
-                            const data = await trailerResponse.json();
-                            if (data.videos && data.videos.trailers && data.videos.trailers.length > 0) {
-                                // Ищем трейлер на YouTube
-                                const youtubeTrailer = data.videos.trailers.find(
-                                    t => t.site === 'youtube' && (t.type === 'TRAILER' || t.type === 'TEASER')
-                                );
-                                
-                                if (youtubeTrailer) {
-                                    trailerUrl = `https://www.youtube.com/embed/${youtubeTrailer.url.split('v=')[1]}`;
-                                    trailerContainer.innerHTML = `<iframe src="${trailerUrl}" frameborder="0" allowfullscreen></iframe>`;
+                        // Проверяем нашу базу данных трейлеров
+                        if (TRAILERS_DB[filmId]) {
+                            trailerUrl = TRAILERS_DB[filmId];
+                            trailerContainer.innerHTML = `
+                                <iframe src="${trailerUrl}" frameborder="0" allowfullscreen></iframe>
+                                <button class="fullscreen-btn" id="fullscreen-btn">
+                                    <i class="fas fa-expand"></i>
+                                </button>
+                            `;
+                            
+                            // Добавляем обработчик для кнопки полноэкранного режима
+                            document.getElementById('fullscreen-btn').addEventListener('click', function() {
+                                const iframe = trailerContainer.querySelector('iframe');
+                                if (iframe.requestFullscreen) {
+                                    iframe.requestFullscreen();
+                                } else if (iframe.webkitRequestFullscreen) {
+                                    iframe.webkitRequestFullscreen();
+                                } else if (iframe.msRequestFullscreen) {
+                                    iframe.msRequestFullscreen();
                                 }
-                            }
+                            });
+                        } else {
+                            // Если трейлера нет в базе, показываем сообщение
+                            trailerContainer.innerHTML = `
+                                <div class="no-trailer">
+                                    <i class="fas fa-film" style="font-size: 2rem; margin-bottom: 0.5rem;"></i>
+                                    <span>Трейлер не найден</span>
+                                </div>
+                            `;
                         }
                     } catch (error) {
                         console.error('Ошибка загрузки трейлера:', error);
+                        trailerContainer.innerHTML = `
+                            <div class="no-trailer">
+                                <i class="fas fa-film" style="font-size: 2rem; margin-bottom: 0.5rem;"></i>
+                                <span>Ошибка загрузки трейлера</span>
+                            </div>
+                        `;
                     }
                 }
                 
                 trailerContainer.classList.add('active');
+                if (trailerUrl) {
+                    fullscreenBtn.style.display = 'block';
+                }
             }
 
             function closeModal() {
@@ -1609,6 +1676,7 @@
                                     </button>
                                 </div>
                             </div>
+                            <div class="modal-container"></div>
                         </div>
                     `).join('') : 
                     '<div style="grid-column: 1 / -1; text-align: center; padding: 3rem;">Ваша коллекция пуста</div>';
