@@ -547,7 +547,7 @@
             border-radius: 50%;
             background: var(--accent-primary);
             opacity: 0.05;
-            filter: blur(80px;
+            filter: blur(80px);
             z-index: -1;
         }
 
@@ -834,28 +834,10 @@
         </section>
     </main>
 
-    <!-- Модальное окно для просмотра оценки -->
-    <div class="modal-overlay hidden" id="film-modal">
-        <div class="modal-content glass">
-            <button class="modal-close" id="modal-close">
-                <i class="fas fa-times"></i>
-            </button>
-            <div id="modal-content"></div>
-        </div>
-    </div>
-
     <script>
-        const KINOPOISK_API = (() => {
+        const KINOPOISK_API = {
             BASE_URL: 'https://api.kinopoisk.dev/v1.4',
-            API_KEY: 'TWEWJGW-8X2MX1G-G5QK9NT-6C6S3FT';
-            let activeModalFilmId = null;
-            let isEditMode = false;
-            let trailerUrl = null;
-
-            function init() {
-                loadFromLocalStorage();
-                setupEventListeners();
-                renderFilmList();
+            API_KEY: 'TWEWJGW-8X2MX1G-G5QK9NT-6C6S3FT'
         };
 
         function handleImageError(img) {
@@ -903,15 +885,15 @@
                 backToSearchBtn: document.getElementById('back-to-search-btn'),
                 genreFilter: document.getElementById('genre-filter'),
                 sortSelect: document.getElementById('sort-select'),
-                filmsContainer: document.getElementById('films-container'),
-                filmModal: document.getElementById('film-modal'),
-                modalClose: document.getElementById('modal-close'),
-                modalContent: document.getElementById('modal-content')
+                filmsContainer: document.getElementById('films-container')
             };
 
             let films = [];
             let currentFilm = null;
             let lastSearchResults = [];
+            let activeModalFilmId = null;
+            let isEditMode = false;
+            let trailerUrl = null;
 
             function init() {
                 loadFromLocalStorage();
@@ -924,7 +906,6 @@
                 elements.searchFilmBtn.addEventListener('click', handleFilmSearch);
                 elements.cancelFilmBtn.addEventListener('click', cancelFilmSelection);
                 elements.backToSearchBtn.addEventListener('click', backToSearchResults);
-                elements.modalClose.addEventListener('click', closeModal);
                 
                 elements.filmInput.addEventListener('input', debounce(() => {
                     const query = elements.filmInput.value.trim();
@@ -944,12 +925,6 @@
                 document.addEventListener('click', handleDynamicClick);
                 document.addEventListener('input', handleDynamicInput);
 
-                // Закрытие модального окна по клику вне его
-                elements.filmModal.addEventListener('click', (e) => {
-                    if (e.target === elements.filmModal) {
-                        closeModal();
-                    }
-                });
                 // Закрытие модального окна по клику на тот же фильм
                 document.addEventListener('click', (e) => {
                     if (isEditMode) return; // Не закрываем при редактировании
@@ -963,6 +938,7 @@
                     }
                 });
             }
+
             async function showFilmDetails(filmId) {
                 if (activeModalFilmId === filmId) {
                     closeModal();
@@ -976,7 +952,7 @@
 
                 // Получаем трейлер
                 try {
-                    const trailerResponse = await fetch(`${KINOPOISK_API.BASE_URL}/movie/${filmId}?videos=true`, {
+                    const trailerResponse = await fetch(`${KINOPOISK_API.BASE_URL}/movie/${filmId}`, {
                         headers: {
                             'X-API-KEY': KINOPOISK_API.API_KEY,
                             'Accept': 'application/json',
@@ -1222,93 +1198,6 @@
                 
                 // Обновляем мини-оценку
                 document.querySelector(`#modal-${activeModalFilmId} .mini-score-value`).textContent = films[filmIndex].totalScore;
-            }
-
-
-            function closeModal() {
-                elements.filmModal.classList.add('hidden');
-            }
-
-            function showFilmDetails(filmId) {
-                const film = films.find(f => f.id === filmId);
-                if (!film) return;
-
-                elements.modalContent.innerHTML = `
-                    <div class="film-card">
-                        <div class="film-header">
-                            <img src="${film.poster}" alt="${film.title}" class="selected-poster" onerror="handleImageError(this)">
-                            <div class="film-details">
-                                <h2 class="selected-title">${film.title}</h2>
-                                <div>
-                                    <span class="selected-genre">${film.genre}</span>
-                                    <span class="selected-genre">${film.year}</span>
-                                    <span class="selected-genre">⭐ ${film.totalScore}</span>
-                                    ${film.personalRating ? `<span class="selected-genre">♥ ${film.personalRating}</span>` : ''}
-                                </div>
-                                ${film.comment ? `<p class="selected-description">${film.comment}</p>` : ''}
-                            </div>
-                        </div>
-
-                        <div class="total-score-container">
-                            <div class="total-score-label">Итоговая оценка</div>
-                            <div class="total-score-value">${film.totalScore}</div>
-                        </div>
-
-                        <div class="criteria-grid">
-                            ${criteriaConfig.map(criterion => `
-                                <div class="criteria-item">
-                                    <span class="criteria-name">${criterion.name}</span>
-                                    <div class="slider-container">
-                                        <input type="range" class="criteria-slider" 
-                                               min="0" max="100" value="${film.ratings[criterion.id] || 50}" 
-                                               step="1" disabled>
-                                        <span class="criteria-value">${film.ratings[criterion.id] || 50}</span>
-                                    </div>
-                                </div>
-                            `).join('')}
-                        </div>
-
-                        <div class="additional-fields">
-                            <div class="form-group">
-                                <label>Оценка в рамках жанра: ${film.genreScore || 5}/10</label>
-                                <div class="slider-container">
-                                    <input type="range" min="0" max="10" value="${film.genreScore || 5}" step="0.1" disabled>
-                                </div>
-                                <small>Жанр: ${film.genreForScore || 'Общая'}</small>
-                            </div>
-
-                            <div class="form-group">
-                                <label>Личное впечатление: ${film.personalRating || 50}/100</label>
-                                <div class="slider-container">
-                                    <input type="range" min="0" max="100" value="${film.personalRating || 50}" step="1" disabled>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label>Комментарий</label>
-                            <textarea disabled>${film.comment || 'Комментарий отсутствует'}</textarea>
-                        </div>
-
-                        <div class="film-item-actions">
-                            <button class="delete-btn" onclick="KinoVisionApp.deleteFilmFromModal('${film.id}')">
-                                <i class="fas fa-trash"></i> Удалить из коллекции
-                            </button>
-                        </div>
-                    </div>
-                `;
-
-                elements.filmModal.classList.remove('hidden');
-                scrollToTop();
-            }
-
-            function deleteFilmFromModal(filmId) {
-                if (confirm('Удалить фильм из коллекции?')) {
-                    films = films.filter(film => film.id !== filmId);
-                    saveToLocalStorage();
-                    renderFilmList();
-                    closeModal();
-                }
             }
 
             function cancelFilmSelection() {
@@ -1717,6 +1606,7 @@
                     films = films.filter(film => film.id !== filmId);
                     saveToLocalStorage();
                     renderFilmList();
+                    closeModal();
                 }
             }
 
@@ -1741,8 +1631,8 @@
             // Публичные методы для глобального доступа
             return {
                 init,
-                deleteFilmFromModal,
-                showFilmDetails
+                showFilmDetails,
+                closeModal
             };
         })();
 
