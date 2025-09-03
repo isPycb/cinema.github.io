@@ -3,38 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>КиноVISION | Умный кинокритик</title>
+    <title>КиноVISION | Премиум кинокритик</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg-primary: #0a0a14;
             --bg-secondary: #15152a;
-            --bg-card: #1e1e38;
-            --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --bg-card: rgba(30, 30, 56, 0.7);
+            --bg-gradient: linear-gradient(135deg, #8A2BE2 0%, #00BFFF 100%);
+            --bg-accent-gradient: linear-gradient(135deg, #FF00FF 0%, #00FFFF 100%);
             --text-primary: #ffffff;
             --text-secondary: #a0a0c0;
             --accent-primary: #7b68ee;
             --accent-secondary: #6a5acd;
             --success: #50c878;
             --danger: #ff6b6b;
-            --border-color: #2a2a4a;
-            --shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-            --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-            --glass: rgba(30, 30, 56, 0.7);
-            --glass-border: rgba(255, 255, 255, 0.1);
+            --border-color: rgba(255, 255, 255, 0.1);
+            --shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            --transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+            --glass: rgba(30, 30, 56, 0.5);
+            --glass-border: rgba(255, 255, 255, 0.15);
         }
 
         [data-theme="light"] {
             --bg-primary: #f0f2ff;
             --bg-secondary: #ffffff;
-            --bg-card: #ffffff;
+            --bg-card: rgba(255, 255, 255, 0.8);
             --bg-gradient: linear-gradient(135deg, #a3bded 0%, #6991c7 100%);
+            --bg-accent-gradient: linear-gradient(135deg, #FF00FF 0%, #00FFFF 100%);
             --text-primary: #1a1a2e;
             --text-secondary: #4a4a6e;
             --accent-primary: #5c6bc0;
             --accent-secondary: #3f51b5;
-            --border-color: #d0d0e2;
-            --shadow: 0 8px 32px rgba(100, 100, 150, 0.1);
+            --border-color: rgba(0, 0, 0, 0.1);
+            --shadow: 0 20px 40px rgba(100, 100, 150, 0.15);
             --glass: rgba(255, 255, 255, 0.7);
             --glass-border: rgba(0, 0, 0, 0.05);
         }
@@ -43,15 +46,16 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            transition: var(--transition);
         }
 
         body {
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            font-family: 'Montserrat', sans-serif;
             background: var(--bg-primary);
             color: var(--text-primary);
             line-height: 1.6;
             min-height: 100vh;
+            overflow-x: hidden;
+            transition: var(--transition);
         }
 
         .container {
@@ -60,12 +64,76 @@
             padding: 0 20px;
         }
 
+        /* Эффект жидкого стекла */
         .glass {
             background: var(--glass);
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(20px) saturate(180%);
             border: 1px solid var(--glass-border);
-            border-radius: 16px;
+            border-radius: 24px;
             box-shadow: var(--shadow);
+        }
+
+        /* Анимированный фон */
+        .animated-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            overflow: hidden;
+        }
+
+        .animated-bg::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(138, 43, 226, 0.1) 0%, transparent 70%);
+            animation: rotate 30s linear infinite;
+        }
+
+        .animated-bg::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            backdrop-filter: blur(80px);
+        }
+
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Плавающие частицы */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            background: var(--bg-gradient);
+            opacity: 0.3;
+            animation: float 15s infinite ease-in-out;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) translateX(0) scale(1); }
+            25% { transform: translateY(-20px) translateX(10px) scale(1.1); }
+            50% { transform: translateY(-35px) translateX(-15px) scale(0.9); }
+            75% { transform: translateY(-15px) translateX(20px) scale(1.05); }
         }
 
         header {
@@ -73,8 +141,14 @@
             position: sticky;
             top: 0;
             z-index: 1000;
-            background: var(--bg-primary);
+            background: rgba(10, 10, 20, 0.8);
+            backdrop-filter: blur(15px);
             border-bottom: 1px solid var(--border-color);
+            transition: var(--transition);
+        }
+
+        [data-theme="light"] header {
+            background: rgba(240, 242, 255, 0.8);
         }
 
         .header-content {
@@ -86,7 +160,8 @@
         }
 
         .app-title {
-            font-size: 2.2rem;
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem;
             font-weight: 800;
             background: var(--bg-gradient);
             -webkit-background-clip: text;
@@ -95,6 +170,7 @@
             display: flex;
             align-items: center;
             gap: 0.5rem;
+            letter-spacing: -0.5px;
         }
 
         .theme-toggle {
@@ -108,6 +184,7 @@
             position: relative;
             display: flex;
             align-items: center;
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.2);
         }
 
         .theme-toggle::before {
@@ -117,7 +194,7 @@
             height: 24px;
             border-radius: 50%;
             background: var(--accent-primary);
-            transition: transform 0.3s ease;
+            transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55);
             left: 3px;
         }
 
@@ -135,22 +212,37 @@
 
         #film-input {
             flex-grow: 1;
-            padding: 1rem 1.5rem;
+            padding: 1.2rem 1.5rem;
             border: 1px solid var(--border-color);
-            border-radius: 12px;
+            border-radius: 16px;
             font-size: 1rem;
             background: var(--bg-secondary);
             color: var(--text-primary);
+            font-family: 'Montserrat', sans-serif;
+            transition: all 0.3s ease;
+        }
+
+        #film-input:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(123, 104, 238, 0.3);
         }
 
         #search-film-btn {
-            padding: 1rem 1.5rem;
+            padding: 1.2rem 1.8rem;
             background: var(--bg-gradient);
             color: white;
             border: none;
-            border-radius: 12px;
+            border-radius: 16px;
             font-weight: 600;
             cursor: pointer;
+            font-family: 'Montserrat', sans-serif;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(123, 104, 238, 0.4);
+        }
+
+        #search-film-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(123, 104, 238, 0.5);
         }
 
         .search-suggestions {
@@ -160,18 +252,20 @@
             right: 0;
             background: var(--bg-secondary);
             border: 1px solid var(--border-color);
-            border-radius: 8px;
+            border-radius: 16px;
             margin-top: 0.5rem;
             max-height: 200px;
             overflow-y: auto;
             z-index: 1000;
             display: none;
+            backdrop-filter: blur(10px);
         }
 
         .suggestion-item {
             padding: 0.75rem 1rem;
             cursor: pointer;
             border-bottom: 1px solid var(--border-color);
+            transition: all 0.2s ease;
         }
 
         .suggestion-item:hover {
@@ -180,37 +274,45 @@
         }
 
         main {
-            padding: 2rem 0;
+            padding: 2.5rem 0;
         }
 
         .search-results {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
         }
 
         .film-result {
             background: var(--bg-card);
-            border-radius: 16px;
+            border-radius: 20px;
             overflow: hidden;
             cursor: pointer;
-            transition: transform 0.3s ease;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            backdrop-filter: blur(10px);
         }
 
         .film-result:hover {
-            transform: translateY(-5px);
+            transform: translateY(-10px) scale(1.03);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4);
         }
 
         .film-poster {
             width: 100%;
-            height: 280px;
+            height: 300px;
             object-fit: cover;
             background: linear-gradient(45deg, var(--bg-secondary), var(--border-color));
+            transition: transform 0.5s ease;
+        }
+
+        .film-result:hover .film-poster {
+            transform: scale(1.1);
         }
 
         .film-info {
-            padding: 1rem;
+            padding: 1.2rem;
             background: var(--bg-secondary);
         }
 
@@ -218,6 +320,9 @@
             font-size: 1.1rem;
             font-weight: 600;
             margin-bottom: 0.5rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .film-year {
@@ -244,26 +349,34 @@
             color: white;
             border: none;
             border-radius: 50%;
-            width: 40px;
-            height: 40px;
+            width: 45px;
+            height: 45px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(255, 107, 107, 0.3);
+        }
+
+        .cancel-btn:hover, .back-btn:hover {
+            transform: rotate(90deg);
         }
 
         .back-btn {
             background: var(--accent-secondary);
+            box-shadow: 0 4px 10px rgba(106, 90, 205, 0.3);
         }
 
         .film-card {
-            padding: 2rem;
+            padding: 2.5rem;
         }
 
         .film-header {
             display: flex;
-            gap: 2rem;
-            margin-bottom: 2rem;
+            gap: 2.5rem;
+            margin-bottom: 2.5rem;
         }
 
         @media (max-width: 768px) {
@@ -273,11 +386,17 @@
         }
 
         .selected-poster {
-            width: 200px;
-            height: 300px;
+            width: 220px;
+            height: 330px;
             object-fit: cover;
-            border-radius: 12px;
+            border-radius: 16px;
             box-shadow: var(--shadow);
+            transition: all 0.4s ease;
+        }
+
+        .selected-poster:hover {
+            transform: scale(1.05);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5);
         }
 
         .film-details {
@@ -285,7 +404,8 @@
         }
 
         .selected-title {
-            font-size: 2rem;
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem;
             font-weight: 700;
             margin-bottom: 0.5rem;
             background: var(--bg-gradient);
@@ -296,19 +416,20 @@
 
         .selected-genre {
             display: inline-block;
-            padding: 0.3rem 0.8rem;
+            padding: 0.4rem 1rem;
             background: var(--bg-secondary);
             border-radius: 20px;
             font-size: 0.9rem;
             margin-bottom: 1rem;
             margin-right: 0.5rem;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
 
         .criteria-grid {
             display: grid;
             grid-template-columns: 1fr;
-            gap: 1.25rem;
-            margin-bottom: 2rem;
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
         }
 
         @media (min-width: 768px) {
@@ -320,11 +441,13 @@
         .criteria-item {
             display: flex;
             flex-direction: column;
-            gap: 0.5rem;
+            gap: 0.8rem;
         }
 
         .criteria-name {
             font-weight: 600;
+            font-size: 1.1rem;
+            color: var(--text-primary);
         }
 
         .slider-container {
@@ -335,46 +458,77 @@
 
         .criteria-slider {
             flex: 1;
-            height: 8px;
+            height: 10px;
             -webkit-appearance: none;
             background: var(--bg-secondary);
-            border-radius: 4px;
+            border-radius: 10px;
+            outline: none;
         }
 
         .criteria-slider::-webkit-slider-thumb {
             -webkit-appearance: none;
-            width: 20px;
-            height: 20px;
+            width: 24px;
+            height: 24px;
             border-radius: 50%;
             background: var(--accent-primary);
             cursor: pointer;
+            box-shadow: 0 2px 8px rgba(123, 104, 238, 0.5);
+            transition: all 0.3s ease;
+        }
+
+        .criteria-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
         }
 
         .criteria-value {
-            font-weight: 600;
-            min-width: 30px;
+            font-weight: 700;
+            min-width: 40px;
             text-align: center;
+            font-size: 1.1rem;
+            color: var(--accent-primary);
         }
 
         .total-score-container {
             text-align: center;
-            margin: 2rem 0;
-            padding: 2rem;
-            border-radius: 20px;
+            margin: 2.5rem 0;
+            padding: 2.5rem;
+            border-radius: 24px;
             background: var(--bg-gradient);
             color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .total-score-container::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transform: rotate(45deg);
+            animation: shimmer 3s infinite linear;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) rotate(45deg); }
         }
 
         .total-score-value {
-            font-size: 4rem;
+            font-size: 5rem;
             font-weight: 800;
+            position: relative;
+            z-index: 2;
+            text-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
         }
 
         .additional-fields {
             display: grid;
             grid-template-columns: 1fr;
-            gap: 1.5rem;
-            margin-bottom: 1.5rem;
+            gap: 1.8rem;
+            margin-bottom: 2rem;
         }
 
         @media (min-width: 480px) {
@@ -386,95 +540,127 @@
         .form-group {
             display: flex;
             flex-direction: column;
-            gap: 0.5rem;
+            gap: 0.8rem;
         }
 
         select, textarea {
-            padding: 1rem;
+            padding: 1.2rem;
             border: 1px solid var(--border-color);
-            border-radius: 12px;
+            border-radius: 16px;
             background: var(--bg-secondary);
             color: var(--text-primary);
-            font-family: inherit;
+            font-family: 'Montserrat', sans-serif;
+            transition: all 0.3s ease;
+        }
+
+        select:focus, textarea:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(123, 104, 238, 0.3);
         }
 
         textarea {
-            min-height: 120px;
+            min-height: 140px;
             resize: vertical;
         }
 
         #save-rating-btn {
             width: 100%;
-            padding: 1.2rem;
+            padding: 1.5rem;
             background: var(--bg-gradient);
             color: white;
             border: none;
-            border-radius: 12px;
+            border-radius: 16px;
             font-weight: 600;
             cursor: pointer;
-            margin-top: 1rem;
+            margin-top: 1.5rem;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 1.1rem;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 8px 20px rgba(123, 104, 238, 0.4);
+        }
+
+        #save-rating-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(123, 104, 238, 0.5);
         }
 
         .films-section {
-            margin-top: 3rem;
+            margin-top: 4rem;
         }
 
         .films-controls {
             display: flex;
-            gap: 1rem;
-            margin-bottom: 1.5rem;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
             flex-wrap: wrap;
             align-items: center;
             justify-content: space-between;
         }
 
+        .section-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.2rem;
+            font-weight: 700;
+            background: var(--bg-gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
         .sort-select {
-            padding: 0.7rem 1rem;
+            padding: 0.9rem 1.2rem;
             border: 1px solid var(--border-color);
-            border-radius: 12px;
+            border-radius: 16px;
             background: var(--bg-secondary);
             color: var(--text-primary);
-            font-family: inherit;
+            font-family: 'Montserrat', sans-serif;
         }
 
         /* КОМПАКТНЫЕ КАРТОЧКИ ФИЛЬМОВ В КОЛЛЕКЦИИ */
         .films-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 1.5rem;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 2rem;
         }
 
         .film-item {
             background: var(--bg-card);
-            border-radius: 12px;
+            border-radius: 20px;
             overflow: hidden;
             display: flex;
             flex-direction: column;
-            transition: transform 0.3s ease;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             cursor: pointer;
             position: relative;
+            backdrop-filter: blur(10px);
         }
 
         .film-item:hover {
-            transform: translateY(-5px);
+            transform: translateY(-10px) scale(1.03);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4);
         }
 
         .film-item-poster {
             width: 100%;
-            height: 280px;
+            height: 300px;
             object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+
+        .film-item:hover .film-item-poster {
+            transform: scale(1.1);
         }
 
         .film-item-info {
-            padding: 1rem;
+            padding: 1.2rem;
             background: var(--bg-secondary);
             display: flex;
             flex-direction: column;
-            gap: 0.3rem;
+            gap: 0.5rem;
         }
 
         .film-item-title {
-            font-size: 1rem;
+            font-size: 1.1rem;
             font-weight: 600;
             white-space: nowrap;
             overflow: hidden;
@@ -482,7 +668,7 @@
         }
 
         .film-item-year {
-            font-size: 0.8rem;
+            font-size: 0.9rem;
             color: var(--text-secondary);
         }
 
@@ -490,13 +676,13 @@
             display: flex;
             align-items: center;
             gap: 0.5rem;
-            font-size: 0.9rem;
-            font-weight: 600;
+            font-size: 1rem;
+            font-weight: 700;
             color: var(--accent-primary);
         }
 
         .film-item-actions {
-            margin-top: 0.5rem;
+            margin-top: 0.8rem;
             display: flex;
             justify-content: flex-end;
         }
@@ -506,10 +692,15 @@
             border: none;
             color: var(--danger);
             cursor: pointer;
-            font-size: 0.8rem;
+            font-size: 0.9rem;
             display: flex;
             align-items: center;
             gap: 0.3rem;
+            transition: all 0.3s ease;
+        }
+
+        .delete-btn:hover {
+            transform: scale(1.1);
         }
 
         .hidden {
@@ -517,13 +708,13 @@
         }
 
         .fade-in {
-            animation: fadeIn 0.5s ease;
+            animation: fadeIn 0.6s ease;
         }
 
         @keyframes fadeIn {
             from {
                 opacity: 0;
-                transform: translateY(20px);
+                transform: translateY(30px);
             }
             to {
                 opacity: 1;
@@ -535,27 +726,13 @@
             background: linear-gradient(90deg, var(--bg-secondary) 25%, var(--border-color) 50%, var(--bg-secondary) 75%);
             background-size: 200% 100%;
             animation: loading 1.5s infinite;
-            border-radius: 8px;
+            border-radius: 16px;
         }
 
         @keyframes loading {
             0% { background-position: 200% 0; }
             100% { background-position: -200% 0; }
         }
-
-        .floating-shape {
-            position: fixed;
-            width: 300px;
-            height: 300px;
-            border-radius: 50%;
-            background: var(--accent-primary);
-            opacity: 0.05;
-            filter: blur(80px);
-            z-index: -1;
-        }
-
-        .shape-1 { top: 10%; left: 10%; }
-        .shape-2 { bottom: 20%; right: 10%; width: 400px; height: 400px; background: var(--success); }
 
         /* Модальное окно для просмотра оценки - ПЕРЕРАБОТАННОЕ */
         .modal-overlay {
@@ -564,14 +741,15 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0, 0, 0, 0.7);
+            background: rgba(0, 0, 0, 0.8);
             display: flex;
             align-items: center;
             justify-content: center;
             z-index: 2000;
             opacity: 0;
             visibility: hidden;
-            transition: opacity 0.3s ease, visibility 0.3s ease;
+            transition: opacity 0.4s ease, visibility 0.4s ease;
+            padding: 20px;
         }
         
         .modal-overlay.active {
@@ -581,31 +759,34 @@
         
         .modal-content {
             background: var(--bg-card);
-            border-radius: 16px;
-            padding: 1.5rem;
+            border-radius: 24px;
+            padding: 2.5rem;
             width: 90%;
             max-width: 800px;
             max-height: 90vh;
             overflow-y: auto;
             position: relative;
-            transform: translateY(20px);
-            transition: transform 0.3s ease;
+            transform: translateY(30px) scale(0.95);
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             box-shadow: var(--shadow);
+            backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid var(--glass-border);
         }
         
         .modal-overlay.active .modal-content {
-            transform: translateY(0);
+            transform: translateY(0) scale(1);
         }
         
         .modal-header {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            margin-bottom: 1.5rem;
+            margin-bottom: 2rem;
         }
         
         .modal-title {
-            font-size: 1.5rem;
+            font-family: 'Playfair Display', serif;
+            font-size: 2rem;
             font-weight: 700;
             background: var(--bg-gradient);
             -webkit-background-clip: text;
@@ -616,142 +797,110 @@
         
         .modal-actions {
             display: flex;
-            gap: 0.5rem;
+            gap: 0.8rem;
         }
         
         .modal-btn {
-            padding: 0.5rem 1rem;
-            border-radius: 8px;
+            padding: 0.7rem 1.2rem;
+            border-radius: 12px;
             border: none;
             cursor: pointer;
             font-weight: 600;
             display: flex;
             align-items: center;
             gap: 0.5rem;
+            transition: all 0.3s ease;
         }
         
-        .trailer-btn {
-            background: var(--accent-secondary);
-            color: white;
+        .modal-btn:hover {
+            transform: translateY(-2px);
         }
         
         .edit-btn {
             background: var(--accent-primary);
             color: white;
+            box-shadow: 0 4px 10px rgba(123, 104, 238, 0.3);
         }
         
         .close-btn {
             background: var(--danger);
             color: white;
+            box-shadow: 0 4px 10px rgba(255, 107, 107, 0.3);
         }
         
         .mini-score {
             text-align: center;
-            margin: 1rem 0;
-            padding: 1rem;
-            border-radius: 12px;
+            margin: 1.5rem 0;
+            padding: 1.5rem;
+            border-radius: 20px;
             background: var(--bg-gradient);
             color: white;
-            width: 100px;
+            width: 120px;
             margin-left: auto;
             margin-right: auto;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .mini-score::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transform: rotate(45deg);
+            animation: shimmer 3s infinite linear;
         }
         
         .mini-score-value {
-            font-size: 2rem;
+            font-size: 2.5rem;
             font-weight: 800;
             line-height: 1;
+            position: relative;
+            z-index: 2;
+            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
         }
         
         .mini-score-label {
-            font-size: 0.8rem;
+            font-size: 0.9rem;
             opacity: 0.9;
-        }
-        
-        .trailer-container {
-            margin: 1.5rem 0;
             position: relative;
-            padding-bottom: 56.25%; /* 16:9 aspect ratio */
-            height: 0;
-            overflow: hidden;
-            border-radius: 12px;
-            background: var(--bg-secondary);
-            display: none;
-            max-width: 600px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-        
-        .trailer-container.active {
-            display: block;
-        }
-        
-        .trailer-container iframe {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
-        
-        .no-trailer {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            color: var(--text-secondary);
-        }
-        
-        .fullscreen-btn {
-            position: absolute;
-            bottom: 10px;
-            right: 10px;
-            background: rgba(0, 0, 0, 0.6);
-            color: white;
-            border: none;
-            border-radius: 4px;
-            padding: 0.3rem 0.5rem;
-            cursor: pointer;
-            z-index: 10;
+            z-index: 2;
         }
         
         .criteria-grid.compact {
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-            margin: 1.5rem 0;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.2rem;
+            margin: 2rem 0;
         }
         
         .criteria-item.compact {
-            gap: 0.3rem;
+            gap: 0.5rem;
         }
         
         .criteria-name.compact {
-            font-size: 0.9rem;
+            font-size: 1rem;
         }
         
         .criteria-slider.compact {
-            height: 6px;
+            height: 8px;
         }
         
         .criteria-slider.compact::-webkit-slider-thumb {
-            width: 16px;
-            height: 16px;
+            width: 20px;
+            height: 20px;
         }
         
         .additional-fields.compact {
             grid-template-columns: 1fr;
-            gap: 1rem;
-            margin: 1.5rem 0;
+            gap: 1.2rem;
+            margin: 2rem 0;
         }
         
         .form-group.compact {
-            gap: 0.3rem;
+            gap: 0.5rem;
         }
         
         .form-group.compact label {
@@ -759,21 +908,27 @@
         }
         
         textarea.compact {
-            min-height: 80px;
-            padding: 0.8rem;
+            min-height: 100px;
+            padding: 1rem;
         }
         
         .save-changes-btn {
             width: 100%;
-            padding: 0.8rem;
+            padding: 1rem;
             background: var(--accent-primary);
             color: white;
             border: none;
-            border-radius: 8px;
+            border-radius: 12px;
             font-weight: 600;
             cursor: pointer;
-            margin-top: 1rem;
+            margin-top: 1.5rem;
             display: none;
+            transition: all 0.3s ease;
+        }
+        
+        .save-changes-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(123, 104, 238, 0.4);
         }
         
         .edit-mode .save-changes-btn {
@@ -795,119 +950,77 @@
             background: var(--bg-primary);
             cursor: not-allowed;
         }
-        
-        /* Стили для альтернативных источников трейлеров */
-        .trailer-links {
-            margin-top: 1.5rem;
-            text-align: center;
+
+        /* Адаптивность */
+        @media (max-width: 768px) {
+            .app-title {
+                font-size: 2rem;
+            }
+            
+            .selected-title {
+                font-size: 2rem;
+            }
+            
+            .modal-title {
+                font-size: 1.7rem;
+            }
+            
+            .total-score-value {
+                font-size: 4rem;
+            }
+            
+            .film-header {
+                flex-direction: column;
+                gap: 1.5rem;
+            }
+            
+            .selected-poster {
+                width: 180px;
+                height: 270px;
+                align-self: center;
+            }
+            
+            .criteria-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .additional-fields {
+                grid-template-columns: 1fr;
+            }
         }
-        
-        .trailer-links-title {
-            font-size: 1.1rem;
-            margin-bottom: 1rem;
-            color: var(--text-primary);
-        }
-        
-        .trailer-link {
-            display: inline-flex;
-            align-items: center;
-            margin: 0.5rem;
-            padding: 0.7rem 1.2rem;
-            background: var(--bg-secondary);
-            color: var(--text-primary);
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: 500;
-            transition: all 0.3s ease;
-        }
-        
-        .trailer-link:hover {
-            background: var(--accent-primary);
-            color: white;
-            transform: translateY(-2px);
-        }
-        
-        .trailer-link i {
-            margin-right: 0.5rem;
-        }
-        
-        .trailer-options {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 10px;
-            margin-top: 15px;
-        }
-        
-        .trailer-source-btn {
-            padding: 8px 15px;
-            background: var(--accent-secondary);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 0.9rem;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-        
-        .trailer-source-btn:hover {
-            background: var(--accent-primary);
-        }
-        
-        /* Стили для встроенного видеоплеера */
-        .video-player-container {
-            position: relative;
-            width: 100%;
-            padding-bottom: 56.25%; /* 16:9 aspect ratio */
-            height: 0;
-            overflow: hidden;
-            border-radius: 12px;
-            margin: 1.5rem 0;
-            display: none;
-        }
-        
-        .video-player-container.active {
-            display: block;
-        }
-        
-        .video-player-container iframe {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
-        
-        .player-controls {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-top: 10px;
-        }
-        
-        .player-control-btn {
-            padding: 8px 15px;
-            background: var(--accent-primary);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-        
-        .player-control-btn:hover {
-            background: var(--accent-secondary);
+
+        @media (max-width: 480px) {
+            .app-title {
+                font-size: 1.8rem;
+            }
+            
+            .header-content {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .theme-toggle {
+                align-self: flex-end;
+            }
+            
+            .section-title {
+                font-size: 1.8rem;
+            }
+            
+            .films-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .sort-select {
+                width: 100%;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="floating-shape shape-1"></div>
-    <div class="floating-shape shape-2"></div>
+    <div class="animated-bg"></div>
+    <div class="particles" id="particles"></div>
 
     <header>
         <div class="container">
@@ -980,41 +1093,6 @@
             API_KEY: 'TWEWJGW-8X2MX1G-G5QK9NT-6C6S3FT'
         };
 
-        // База данных трейлеров из различных источников
-        const TRAILERS_DB = {
-            // Кинопоиск (используем официальные трейлеры)
-            '535341': { // Человек-паук: Нет пути домой
-                vk: '456240291',
-                vk_oid: '-2000412666',
-                ok: '3053188797241',
-                kp: 'https://www.kinopoisk.ru/film/535341/video/159663/'
-            },
-            '1143242': { // Дюна
-                vk: '456240292',
-                vk_oid: '-2000412666',
-                ok: '3053188797242', 
-                kp: 'https://www.kinopoisk.ru/film/1143242/video/174558/'
-            },
-            '1318972': { // Бэтмен
-                vk: '456240293',
-                vk_oid: '-2000412666',
-                ok: '3053188797243',
-                kp: 'https://www.kinopoisk.ru/film/1318972/video/180991/'
-            },
-            '1339594': { // Тор: Любовь и гром
-                vk: '456240294',
-                vk_oid: '-2000412666',
-                ok: '3053188797244',
-                kp: 'https://www.kinopoisk.ru/film/1339594/video/186496/'
-            },
-            '1267348': { // Топ Ган: Мэверик
-                vk: '456240295',
-                vk_oid: '-2000412666',
-                ok: '3053188797245',
-                kp: 'https://www.kinopoisk.ru/film/1267348/video/182773/'
-            }
-        };
-
         function handleImageError(img) {
             img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjQ1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMzMzIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0iI2ZmZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSI+0J/QvtC00YLRg9C10YIgTm90IEZvdW5kPC90ZXh0Pjwvc3ZnPg==';
             img.onerror = null;
@@ -1037,6 +1115,31 @@
                 top: 0,
                 behavior: 'smooth'
             });
+        }
+
+        // Создание частиц для фона
+        function createParticles() {
+            const particlesContainer = document.getElementById('particles');
+            const particleCount = 30;
+            
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.classList.add('particle');
+                
+                // Случайные размеры и позиции
+                const size = Math.random() * 20 + 5;
+                const posX = Math.random() * 100;
+                const posY = Math.random() * 100;
+                const delay = Math.random() * 15;
+                
+                particle.style.width = `${size}px`;
+                particle.style.height = `${size}px`;
+                particle.style.left = `${posX}%`;
+                particle.style.top = `${posY}%`;
+                particle.style.animationDelay = `${delay}s`;
+                
+                particlesContainer.appendChild(particle);
+            }
         }
 
         const KinoVisionApp = (() => {
@@ -1070,13 +1173,12 @@
             let lastSearchResults = [];
             let activeModalFilmId = null;
             let isEditMode = false;
-            let trailerUrl = null;
-            let videoPlayer = null;
 
             function init() {
                 loadFromLocalStorage();
                 setupEventListeners();
                 renderFilmList();
+                createParticles();
             }
 
             function setupEventListeners() {
@@ -1133,59 +1235,12 @@
                             </div>
                         </div>
                         <div class="modal-actions">
-                            <button class="modal-btn trailer-btn" id="trailer-btn">
-                                <i class="fas fa-play"></i> Трейлер
-                            </button>
                             <button class="modal-btn edit-btn" id="edit-film-btn">
-                                <i class="fas fa-edit"></i> 
+                                <i class="fas fa-edit"></i> Редактировать
                             </button>
                             <button class="modal-btn close-btn" id="close-modal-btn">
-                                <i class="fas fa-times"></i> 
+                                <i class="fas fa-times"></i> Закрыть
                             </button>
-                        </div>
-                    </div>
-                    
-                    <div class="video-player-container" id="video-player-container">
-                        <iframe id="video-player" frameborder="0" allowfullscreen></iframe>
-                    </div>
-                    
-                    <div class="trailer-container" id="trailer-container">
-                        <div class="no-trailer">
-                            <i class="fas fa-film" style="font-size: 2rem; margin-bottom: 0.5rem;"></i>
-                            <span>Нажмите "Трейлер" для просмотра</span>
-                        </div>
-                    </div>
-                    
-                    <div class="player-controls" id="player-controls" style="display: none;">
-                        <button class="player-control-btn" id="play-btn">
-                            <i class="fas fa-play"></i> Воспроизвести
-                        </button>
-                        <button class="player-control-btn" id="pause-btn">
-                            <i class="fas fa-pause"></i> Пауза
-                        </button>
-                        <button class="player-control-btn" id="fullscreen-btn">
-                            <i class="fas fa-expand"></i> Полный экран
-                        </button>
-                    </div>
-                    
-                    <div class="trailer-links" id="trailer-links" style="display: none;">
-                        <h3 class="trailer-links-title">Искать трейлер на платформах:</h3>
-                        <div class="trailer-options">
-                            <a href="#" class="trailer-link" id="trailer-vk" target="_blank">
-                                <i class="fab fa-vk"></i> VK Видео
-                            </a>
-                            <a href="#" class="trailer-link" id="trailer-ok" target="_blank">
-                                <i class="fab fa-odnoklassniki"></i> Одноклассники
-                            </a>
-                            <a href="#" class="trailer-link" id="trailer-kp" target="_blank">
-                                <i class="fas fa-film"></i> Кинопоиск
-                            </a>
-                            <a href="#" class="trailer-link" id="trailer-ivi" target="_blank">
-                                <i class="fas fa-play-circle"></i> IVI
-                            </a>
-                            <a href="#" class="trailer-link" id="trailer-yandex" target="_blank">
-                                <i class="fab fa-yandex"></i> Яндекс
-                            </a>
                         </div>
                     </div>
                     
@@ -1239,10 +1294,6 @@
                 document.getElementById('close-modal-btn').addEventListener('click', closeModal);
                 document.getElementById('edit-film-btn').addEventListener('click', toggleEditMode);
                 document.getElementById('save-changes-btn').addEventListener('click', saveFilmChanges);
-                document.getElementById('trailer-btn').addEventListener('click', toggleTrailer);
-                document.getElementById('play-btn').addEventListener('click', playVideo);
-                document.getElementById('pause-btn').addEventListener('click', pauseVideo);
-                document.getElementById('fullscreen-btn').addEventListener('click', toggleFullscreen);
                 
                 // Обработчики для полей в режиме редактирования
                 document.getElementById('edit-genre-score').addEventListener('input', (e) => {
@@ -1264,90 +1315,10 @@
                 });
             }
 
-            function toggleTrailer() {
-                const trailerContainer = document.getElementById('trailer-container');
-                const trailerLinks = document.getElementById('trailer-links');
-                const videoPlayerContainer = document.getElementById('video-player-container');
-                const playerControls = document.getElementById('player-controls');
-                
-                if (videoPlayerContainer.classList.contains('active')) {
-                    videoPlayerContainer.classList.remove('active');
-                    playerControls.style.display = 'none';
-                    trailerLinks.style.display = 'none';
-                    return;
-                }
-                
-                // Получаем информацию о фильме
-                const film = films.find(f => f.id === activeModalFilmId);
-                if (!film) return;
-                
-                // Генерируем поисковые ссылки
-                const searchQuery = encodeURIComponent(`${film.title} ${film.year} трейлер`);
-                
-                // Устанавливаем ссылки на поиск
-                document.getElementById('trailer-vk').href = `https://vk.com/video?q=${searchQuery}&section=search`;
-                document.getElementById('trailer-ok').href = `https://ok.ru/video/search?query=${searchQuery}`;
-                document.getElementById('trailer-kp').href = `https://www.kinopoisk.ru/index.php?kp_query=${searchQuery}`;
-                document.getElementById('trailer-ivi').href = `https://www.ivi.ru/search/?q=${searchQuery}`;
-                document.getElementById('trailer-yandex').href = `https://yandex.ru/video/search?text=${searchQuery}`;
-                
-                // Проверяем, есть ли готовые трейлеры в нашей базе
-                if (TRAILERS_DB[activeModalFilmId]) {
-                    const trailers = TRAILERS_DB[activeModalFilmId];
-                    
-                    // Если есть прямой трейлер, показываем его
-                    if (trailers.vk && trailers.vk_oid) {
-                        const videoPlayer = document.getElementById('video-player');
-                        videoPlayer.src = `https://vk.com/video_ext.php?oid=${trailers.vk_oid}&id=${trailers.vk}&hash=access_hash`;
-                        videoPlayerContainer.classList.add('active');
-                        playerControls.style.display = 'flex';
-                        trailerLinks.style.display = 'block';
-                        return;
-                    }
-                }
-                
-                // Если прямого трейлера нет, показываем ссылки для поиска
-                trailerLinks.style.display = 'block';
-            }
-
-            function playVideo() {
-                const videoPlayer = document.getElementById('video-player');
-                try {
-                    videoPlayer.contentWindow.postMessage('{"method":"play"}', '*');
-                } catch (e) {
-                    console.error('Ошибка воспроизведения видео:', e);
-                }
-            }
-
-            function pauseVideo() {
-                const videoPlayer = document.getElementById('video-player');
-                try {
-                    videoPlayer.contentWindow.postMessage('{"method":"pause"}', '*');
-                } catch (e) {
-                    console.error('Ошибка при паузе видео:', e);
-                }
-            }
-
-            function toggleFullscreen() {
-                const videoPlayer = document.getElementById('video-player');
-                try {
-                    if (videoPlayer.requestFullscreen) {
-                        videoPlayer.requestFullscreen();
-                    } else if (videoPlayer.webkitRequestFullscreen) {
-                        videoPlayer.webkitRequestFullscreen();
-                    } else if (videoPlayer.msRequestFullscreen) {
-                        videoPlayer.msRequestFullscreen();
-                    }
-                } catch (e) {
-                    console.error('Ошибка перехода в полноэкранный режим:', e);
-                }
-            }
-
             function closeModal() {
                 elements.filmModal.classList.remove('active');
                 activeModalFilmId = null;
                 isEditMode = false;
-                trailerUrl = null;
             }
 
             function toggleEditMode() {
