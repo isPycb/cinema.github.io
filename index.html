@@ -554,46 +554,223 @@
         .shape-1 { top: 10%; left: 10%; }
         .shape-2 { bottom: 20%; right: 10%; width: 400px; height: 400px; background: var(--success); }
 
-        /* Модальное окно для просмотра оценки */
+        /* Модальное окно для просмотра оценки - ПЕРЕРАБОТАННОЕ */
         .modal-overlay {
-            position: fixed;
+            position: absolute;
             top: 0;
             left: 0;
             right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.8);
+            background: transparent;
+            z-index: 100;
             display: flex;
-            align-items: center;
             justify-content: center;
-            z-index: 2000;
-            padding: 20px;
+            padding: 0 20px;
+            overflow: hidden;
+            max-height: 0;
+            transition: max-height 0.5s cubic-bezier(0.18, 0.89, 0.32, 1.28);
         }
-
+        
+        .modal-overlay.active {
+            max-height: 1000px;
+        }
+        
         .modal-content {
             background: var(--bg-card);
             border-radius: 16px;
-            padding: 2rem;
-            max-width: 800px;
+            padding: 1.5rem;
             width: 100%;
-            max-height: 90vh;
-            overflow-y: auto;
+            max-width: 800px;
             position: relative;
+            margin-top: 10px;
+            box-shadow: var(--shadow);
+            transform: scale(0.95);
+            opacity: 0;
+            transition: transform 0.3s ease, opacity 0.3s ease;
         }
-
-        .modal-close {
-            position: absolute;
-            top: 1rem;
-            right: 1rem;
+        
+        .modal-overlay.active .modal-content {
+            transform: scale(1);
+            opacity: 1;
+        }
+        
+        .film-item.expanded {
+            transform: scale(1.05);
+            z-index: 101;
+            transition: transform 0.3s ease;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: var(--bg-gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .modal-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .modal-btn {
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .edit-btn {
+            background: var(--accent-primary);
+            color: white;
+        }
+        
+        .close-btn {
             background: var(--danger);
             color: white;
+        }
+        
+        .mini-score {
+            text-align: center;
+            margin: 1rem 0;
+            padding: 1rem;
+            border-radius: 12px;
+            background: var(--bg-gradient);
+            color: white;
+            width: 100px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .mini-score-value {
+            font-size: 2rem;
+            font-weight: 800;
+            line-height: 1;
+        }
+        
+        .mini-score-label {
+            font-size: 0.8rem;
+            opacity: 0.9;
+        }
+        
+        .trailer-container {
+            margin: 1.5rem 0;
+            position: relative;
+            padding-bottom: 56.25%; /* 16:9 aspect ratio */
+            height: 0;
+            overflow: hidden;
+            border-radius: 12px;
+            background: var(--bg-secondary);
+        }
+        
+        .trailer-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             border: none;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            cursor: pointer;
+        }
+        
+        .no-trailer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             display: flex;
             align-items: center;
             justify-content: center;
+            flex-direction: column;
+            color: var(--text-secondary);
+        }
+        
+        .criteria-grid.compact {
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+        
+        .criteria-item.compact {
+            gap: 0.3rem;
+        }
+        
+        .criteria-name.compact {
+            font-size: 0.9rem;
+        }
+        
+        .criteria-slider.compact {
+            height: 6px;
+        }
+        
+        .criteria-slider.compact::-webkit-slider-thumb {
+            width: 16px;
+            height: 16px;
+        }
+        
+        .additional-fields.compact {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+        
+        .form-group.compact {
+            gap: 0.3rem;
+        }
+        
+        .form-group.compact label {
+            font-size: 0.9rem;
+        }
+        
+        textarea.compact {
+            min-height: 80px;
+            padding: 0.8rem;
+        }
+        
+        .save-changes-btn {
+            width: 100%;
+            padding: 0.8rem;
+            background: var(--accent-primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 1rem;
+            display: none;
+        }
+        
+        .edit-mode .save-changes-btn {
+            display: block;
+        }
+        
+        .edit-mode .criteria-slider,
+        .edit-mode #edit-genre-score,
+        .edit-mode #edit-personal-rating,
+        .edit-mode #edit-comment {
+            background: var(--bg-secondary);
+            cursor: pointer;
+        }
+        
+        .edit-mode .criteria-slider:disabled,
+        .edit-mode #edit-genre-score:disabled,
+        .edit-mode #edit-personal-rating:disabled,
+        .edit-mode #edit-comment:disabled {
+            background: var(--bg-primary);
+            cursor: not-allowed;
         }
     </style>
 </head>
@@ -668,9 +845,17 @@
     </div>
 
     <script>
-        const KINOPOISK_API = {
+        const KINOPOISK_API = (() => {
             BASE_URL: 'https://api.kinopoisk.dev/v1.4',
-            API_KEY: 'TWEWJGW-8X2MX1G-G5QK9NT-6C6S3FT'
+            API_KEY: 'TWEWJGW-8X2MX1G-G5QK9NT-6C6S3FT';
+            let activeModalFilmId = null;
+            let isEditMode = false;
+            let trailerUrl = null;
+
+            function init() {
+                loadFromLocalStorage();
+                setupEventListeners();
+                renderFilmList();
         };
 
         function handleImageError(img) {
@@ -765,7 +950,280 @@
                         closeModal();
                     }
                 });
+                // Закрытие модального окна по клику на тот же фильм
+                document.addEventListener('click', (e) => {
+                    if (isEditMode) return; // Не закрываем при редактировании
+                    
+                    if (e.target.closest('.film-item')) {
+                        const filmId = e.target.closest('.film-item').dataset.filmId;
+                        
+                        if (activeModalFilmId === filmId) {
+                            closeModal();
+                        }
+                    }
+                });
             }
+            async function showFilmDetails(filmId) {
+                if (activeModalFilmId === filmId) {
+                    closeModal();
+                    return;
+                }
+                
+                closeModal(); // Закрываем предыдущее модальное окно
+                
+                const film = films.find(f => f.id === filmId);
+                if (!film) return;
+
+                // Получаем трейлер
+                try {
+                    const trailerResponse = await fetch(`${KINOPOISK_API.BASE_URL}/movie/${filmId}?videos=true`, {
+                        headers: {
+                            'X-API-KEY': KINOPOISK_API.API_KEY,
+                            'Accept': 'application/json',
+                        }
+                    });
+                    
+                    if (trailerResponse.ok) {
+                        const data = await trailerResponse.json();
+                        if (data.videos && data.videos.trailers && data.videos.trailers.length > 0) {
+                            // Ищем трейлер на YouTube
+                            const youtubeTrailer = data.videos.trailers.find(
+                                t => t.site === 'youtube' && (t.type === 'TRAILER' || t.type === 'TEASER')
+                            );
+                            
+                            if (youtubeTrailer) {
+                                trailerUrl = `https://www.youtube.com/embed/${youtubeTrailer.url.split('v=')[1]}`;
+                            } else {
+                                trailerUrl = null;
+                            }
+                        } else {
+                            trailerUrl = null;
+                        }
+                    } else {
+                        trailerUrl = null;
+                    }
+                } catch (error) {
+                    console.error('Ошибка загрузки трейлера:', error);
+                    trailerUrl = null;
+                }
+
+                // Находим элемент фильма и его позицию
+                const filmElement = document.querySelector(`.film-item[data-film-id="${filmId}"]`);
+                if (!filmElement) return;
+                
+                // Добавляем класс для увеличения
+                filmElement.classList.add('expanded');
+                
+                // Создаем модальное окно
+                const modal = document.createElement('div');
+                modal.className = 'modal-overlay';
+                modal.id = `modal-${filmId}`;
+                
+                // Вставляем после элемента фильма
+                filmElement.parentNode.insertBefore(modal, filmElement.nextSibling);
+                
+                // Заполняем контентом
+                modal.innerHTML = `
+                    <div class="modal-content glass">
+                        <div class="modal-header">
+                            <h2 class="modal-title">${film.title} (${film.year})</h2>
+                            <div class="modal-actions">
+                                <button class="modal-btn edit-btn" id="edit-film-btn">
+                                    <i class="fas fa-edit"></i> Редактировать
+                                </button>
+                                <button class="modal-btn close-btn" id="close-modal-btn">
+                                    <i class="fas fa-times"></i> Закрыть
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="mini-score">
+                            <div class="mini-score-value">${film.totalScore}</div>
+                            <div class="mini-score-label">Общая оценка</div>
+                        </div>
+                        
+                        ${trailerUrl ? `
+                        <div class="trailer-container">
+                            <iframe src="${trailerUrl}" frameborder="0" allowfullscreen></iframe>
+                        </div>
+                        ` : `
+                        <div class="trailer-container">
+                            <div class="no-trailer">
+                                <i class="fas fa-film" style="font-size: 2rem; margin-bottom: 0.5rem;"></i>
+                                <span>Трейлер не найден</span>
+                            </div>
+                        </div>
+                        `}
+                        
+                        <div class="criteria-grid compact">
+                            ${criteriaConfig.map(criterion => `
+                                <div class="criteria-item compact">
+                                    <span class="criteria-name compact">${criterion.name}</span>
+                                    <div class="slider-container">
+                                        <input type="range" class="criteria-slider compact" 
+                                               min="0" max="100" value="${film.ratings[criterion.id] || 50}" 
+                                               step="1" disabled>
+                                        <span class="criteria-value">${film.ratings[criterion.id] || 50}</span>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+
+                        <div class="additional-fields compact">
+                            <div class="form-group compact">
+                                <label>Оценка в рамках жанра: ${film.genreScore || 5}/10</label>
+                                <div class="slider-container">
+                                    <input type="range" id="edit-genre-score" min="0" max="10" value="${film.genreScore || 5}" step="0.1" disabled>
+                                    <span class="criteria-value" id="edit-genre-score-value">${film.genreScore || 5}</span>
+                                </div>
+                                <small>Жанр: ${film.genreForScore || 'Общая'}</small>
+                            </div>
+
+                            <div class="form-group compact">
+                                <label>Личное впечатление: ${film.personalRating || 50}/100</label>
+                                <div class="slider-container">
+                                    <input type="range" id="edit-personal-rating" min="0" max="100" value="${film.personalRating || 50}" step="1" disabled>
+                                    <span class="criteria-value" id="edit-personal-rating-value">${film.personalRating || 50}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group compact">
+                            <label>Комментарий</label>
+                            <textarea id="edit-comment" class="compact" disabled>${film.comment || ''}</textarea>
+                        </div>
+                        
+                        <button class="save-changes-btn" id="save-changes-btn">
+                            <i class="fas fa-save"></i> Сохранить изменения
+                        </button>
+                    </div>
+                `;
+                
+                // Активируем модальное окно
+                setTimeout(() => {
+                    modal.classList.add('active');
+                    activeModalFilmId = filmId;
+                }, 10);
+                
+                // Добавляем обработчики для модального окна
+                document.getElementById('close-modal-btn').addEventListener('click', closeModal);
+                document.getElementById('edit-film-btn').addEventListener('click', toggleEditMode);
+                document.getElementById('save-changes-btn').addEventListener('click', saveFilmChanges);
+                
+                // Обработчики для полей в режиме редактирования
+                document.getElementById('edit-genre-score').addEventListener('input', (e) => {
+                    document.getElementById('edit-genre-score-value').textContent = e.target.value;
+                });
+                
+                document.getElementById('edit-personal-rating').addEventListener('input', (e) => {
+                    document.getElementById('edit-personal-rating-value').textContent = e.target.value;
+                });
+                
+                criteriaConfig.forEach(criterion => {
+                    const slider = document.getElementById(`edit-${criterion.id}`);
+                    if (slider) {
+                        slider.addEventListener('input', (e) => {
+                            const valueDisplay = e.target.nextElementSibling;
+                            if (valueDisplay) valueDisplay.textContent = e.target.value;
+                        });
+                    }
+                });
+            }
+
+            function closeModal() {
+                if (!activeModalFilmId) return;
+                
+                const modal = document.getElementById(`modal-${activeModalFilmId}`);
+                if (modal) {
+                    modal.classList.remove('active');
+                    
+                    setTimeout(() => {
+                        if (modal.parentNode) {
+                            modal.parentNode.removeChild(modal);
+                        }
+                    }, 500);
+                }
+                
+                // Убираем увеличение с элемента фильма
+                const filmElement = document.querySelector(`.film-item[data-film-id="${activeModalFilmId}"]`);
+                if (filmElement) {
+                    filmElement.classList.remove('expanded');
+                }
+                
+                activeModalFilmId = null;
+                isEditMode = false;
+            }
+
+            function toggleEditMode() {
+                isEditMode = !isEditMode;
+                
+                const modalContent = document.querySelector(`#modal-${activeModalFilmId} .modal-content`);
+                if (!modalContent) return;
+                
+                if (isEditMode) {
+                    modalContent.classList.add('edit-mode');
+                    
+                    // Активируем все поля для редактирования
+                    criteriaConfig.forEach(criterion => {
+                        const slider = document.getElementById(`edit-${criterion.id}`);
+                        if (slider) slider.disabled = false;
+                    });
+                    
+                    document.getElementById('edit-genre-score').disabled = false;
+                    document.getElementById('edit-personal-rating').disabled = false;
+                    document.getElementById('edit-comment').disabled = false;
+                } else {
+                    modalContent.classList.remove('edit-mode');
+                    
+                    // Деактивируем все поля
+                    criteriaConfig.forEach(criterion => {
+                        const slider = document.getElementById(`edit-${criterion.id}`);
+                        if (slider) slider.disabled = true;
+                    });
+                    
+                    document.getElementById('edit-genre-score').disabled = true;
+                    document.getElementById('edit-personal-rating').disabled = true;
+                    document.getElementById('edit-comment').disabled = true;
+                }
+            }
+
+            function saveFilmChanges() {
+                if (!activeModalFilmId) return;
+                
+                const filmIndex = films.findIndex(f => f.id === activeModalFilmId);
+                if (filmIndex === -1) return;
+                
+                // Обновляем оценки по критериям
+                criteriaConfig.forEach(criterion => {
+                    const slider = document.getElementById(`edit-${criterion.id}`);
+                    if (slider) {
+                        films[filmIndex].ratings[criterion.id] = parseFloat(slider.value);
+                    }
+                });
+                
+                // Пересчитываем общую оценку
+                let total = 0;
+                criteriaConfig.forEach(criterion => {
+                    total += films[filmIndex].ratings[criterion.id] * criterion.weight;
+                });
+                films[filmIndex].totalScore = Math.round(total);
+                
+                // Обновляем другие поля
+                films[filmIndex].genreScore = parseFloat(document.getElementById('edit-genre-score').value);
+                films[filmIndex].personalRating = parseFloat(document.getElementById('edit-personal-rating').value);
+                films[filmIndex].comment = document.getElementById('edit-comment').value;
+                
+                // Сохраняем и обновляем интерфейс
+                saveToLocalStorage();
+                renderFilmList();
+                
+                // Выходим из режима редактирования
+                toggleEditMode();
+                
+                // Обновляем мини-оценку
+                document.querySelector(`#modal-${activeModalFilmId} .mini-score-value`).textContent = films[filmIndex].totalScore;
+            }
+
 
             function closeModal() {
                 elements.filmModal.classList.add('hidden');
@@ -1295,6 +1753,3 @@
     </script>
 </body>
 </html>
-
-
-
