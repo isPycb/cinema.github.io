@@ -425,6 +425,7 @@
             margin-bottom: 1.5rem;
             flex-wrap: wrap;
             align-items: center;
+            justify-content: space-between;
         }
 
         .sort-select {
@@ -794,6 +795,66 @@
             background: var(--bg-primary);
             cursor: not-allowed;
         }
+        
+        /* Стили для альтернативных источников трейлеров */
+        .trailer-links {
+            margin-top: 1.5rem;
+            text-align: center;
+        }
+        
+        .trailer-links-title {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+        
+        .trailer-link {
+            display: inline-flex;
+            align-items: center;
+            margin: 0.5rem;
+            padding: 0.7rem 1.2rem;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .trailer-link:hover {
+            background: var(--accent-primary);
+            color: white;
+            transform: translateY(-2px);
+        }
+        
+        .trailer-link i {
+            margin-right: 0.5rem;
+        }
+        
+        .trailer-options {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .trailer-source-btn {
+            padding: 8px 15px;
+            background: var(--accent-secondary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .trailer-source-btn:hover {
+            background: var(--accent-primary);
+        }
     </style>
 </head>
 <body>
@@ -831,26 +892,28 @@
         <section class="films-section">
             <div class="films-controls">
                 <h2 class="section-title">Моя киноколлекция</h2>
-                <select class="genre-filter" id="genre-filter">
-                    <option value="all">Все жанры</option>
-                    <option value="комедия">Комедия</option>
-                    <option value="драма">Драма</option>
-                    <option value="боевик">Боевик</option>
-                    <option value="фантастика">Фантастика</option>
-                    <option value="ужасы">Ужасы</option>
-                    <option value="триллер">Триллер</option>
-                    <option value="мультфильм">Мультфильмы</option>
-                    <option value="аниме">Аниме</option>
-                </select>
-                <select class="sort-select" id="sort-select">
-                    <option value="rating">По оценке (убыв.)</option>
-                    <option value="rating-asc">По оценке (возр.)</option>
-                    <option value="personal">По личному впечатлению (убыв.)</option>
-                    <option value="personal-asc">По личному впечатлению (возр.)</option>
-                    <option value="name">По названию (А-Я)</option>
-                    <option value="name-desc">По названию (Я-А)</option>
-                    <option value="date">По дате добавления</option>
-                </select>
+                <div>
+                    <select class="genre-filter" id="genre-filter">
+                        <option value="all">Все жанры</option>
+                        <option value="комедия">Комедия</option>
+                        <option value="драма">Драма</option>
+                        <option value="боевик">Боевик</option>
+                        <option value="фантастика">Фантастика</option>
+                        <option value="ужасы">Ужасы</option>
+                        <option value="триллер">Триллер</option>
+                        <option value="мультфильм">Мультфильмы</option>
+                        <option value="аниме">Аниме</option>
+                    </select>
+                    <select class="sort-select" id="sort-select">
+                        <option value="rating">По оценке (убыв.)</option>
+                        <option value="rating-asc">По оценке (возр.)</option>
+                        <option value="personal">По личному впечатлению (убыв.)</option>
+                        <option value="personal-asc">По личному впечатлению (возр.)</option>
+                        <option value="name">По названию (А-Я)</option>
+                        <option value="name-desc">По названию (Я-А)</option>
+                        <option value="date">По дате добавления</option>
+                    </select>
+                </div>
             </div>
             <div class="films-grid" id="films-container"></div>
         </section>
@@ -869,18 +932,34 @@
             API_KEY: 'TWEWJGW-8X2MX1G-G5QK9NT-6C6S3FT'
         };
 
-        // База данных трейлеров из VK Video для популярных фильмов
+        // База данных трейлеров из различных источников
         const TRAILERS_DB = {
-            '535341': 'https://vk.com/video_ext.php?oid=-2000412666&id=456240291&hash=4e6b7e7b7c0b4d0a', // Человек-паук: Нет пути домой
-            '1143242': 'https://vk.com/video_ext.php?oid=-2000412666&id=456240292&hash=5a7c8e8d8e0c5e1b', // Дюна
-            '1318972': 'https://vk.com/video_ext.php?oid=-2000412666&id=456240293&hash=6b8d9f9e9f0d6f2c', // Бэтмен
-            '1339594': 'https://vk.com/video_ext.php?oid=-2000412666&id=456240294&hash=7c9ea0afb01e7g3d', // Тор: Любовь и гром
-            '1267348': 'https://vk.com/video_ext.php?oid=-2000412666&id=456240295&hash=8dafb1b0c12f8h4e', // Топ Ган: Мэверик
-            '1334874': 'https://vk.com/video_ext.php?oid=-2000412666&id=456240296&hash=9eb0c2c1d23g9i5f', // Аватар: Путь воды
-            '1392836': 'https://vk.com/video_ext.php?oid=-2000412666&id=456240297&hash=0fc1d3d2e34h0j6g', // Мстители: Секретные войны
-            '1322324': 'https://vk.com/video_ext.php?oid=-2000412666&id=456240298&hash=1gd2e4e3f45i1k7h', // Джон Уик 4
-            '1387021': 'https://vk.com/video_ext.php?oid=-2000412666&id=456240299&hash=2he3f5f4g56j2l8i', // Оппенгеймер
-            '1392631': 'https://vk.com/video_ext.php?oid=-2000412666&id=456240300&hash=3if4g6g5h67k3m9j'  // Барби
+            // Кинопоиск (используем официальные трейлеры)
+            '535341': { // Человек-паук: Нет пути домой
+                vk: 'https://vk.com/video_ext.php?oid=-2000412666&id=456240291',
+                ok: 'https://ok.ru/video/3053188797241',
+                kp: 'https://www.kinopoisk.ru/film/535341/video/159663/'
+            },
+            '1143242': { // Дюна
+                vk: 'https://vk.com/video_ext.php?oid=-2000412666&id=456240292',
+                ok: 'https://ok.ru/video/3053188797242', 
+                kp: 'https://www.kinopoisk.ru/film/1143242/video/174558/'
+            },
+            '1318972': { // Бэтмен
+                vk: 'https://vk.com/video_ext.php?oid=-2000412666&id=456240293',
+                ok: 'https://ok.ru/video/3053188797243',
+                kp: 'https://www.kinopoisk.ru/film/1318972/video/180991/'
+            },
+            '1339594': { // Тор: Любовь и гром
+                vk: 'https://vk.com/video_ext.php?oid=-2000412666&id=456240294',
+                ok: 'https://ok.ru/video/3053188797244',
+                kp: 'https://www.kinopoisk.ru/film/1339594/video/186496/'
+            },
+            '1267348': { // Топ Ган: Мэверик
+                vk: 'https://vk.com/video_ext.php?oid=-2000412666&id=456240295',
+                ok: 'https://ok.ru/video/3053188797245',
+                kp: 'https://www.kinopoisk.ru/film/1267348/video/182773/'
+            }
         };
 
         function handleImageError(img) {
@@ -1015,11 +1094,32 @@
                     <div class="trailer-container" id="trailer-container">
                         <div class="no-trailer">
                             <i class="fas fa-film" style="font-size: 2rem; margin-bottom: 0.5rem;"></i>
-                            <span>Трейлер не найден</span>
+                            <span>Нажмите "Трейлер" для поиска</span>
                         </div>
                         <button class="fullscreen-btn" id="fullscreen-btn" style="display: none;">
                             <i class="fas fa-expand"></i>
                         </button>
+                    </div>
+                    
+                    <div class="trailer-links" id="trailer-links" style="display: none;">
+                        <h3 class="trailer-links-title">Искать трейлер на платформах:</h3>
+                        <div class="trailer-options">
+                            <a href="#" class="trailer-link" id="trailer-vk" target="_blank">
+                                <i class="fab fa-vk"></i> VK Видео
+                            </a>
+                            <a href="#" class="trailer-link" id="trailer-ok" target="_blank">
+                                <i class="fab fa-odnoklassniki"></i> Одноклассники
+                            </a>
+                            <a href="#" class="trailer-link" id="trailer-kp" target="_blank">
+                                <i class="fas fa-film"></i> Кинопоиск
+                            </a>
+                            <a href="#" class="trailer-link" id="trailer-ivi" target="_blank">
+                                <i class="fas fa-play-circle"></i> IVI
+                            </a>
+                            <a href="#" class="trailer-link" id="trailer-yandex" target="_blank">
+                                <i class="fab fa-yandex"></i> Яндекс
+                            </a>
+                        </div>
                     </div>
                     
                     <div class="criteria-grid compact">
@@ -1096,64 +1196,62 @@
 
             function toggleTrailer() {
                 const trailerContainer = document.getElementById('trailer-container');
+                const trailerLinks = document.getElementById('trailer-links');
                 const fullscreenBtn = document.getElementById('fullscreen-btn');
                 
-                if (trailerContainer.classList.contains('active')) {
+                if (trailerLinks.style.display === 'block') {
+                    trailerLinks.style.display = 'none';
                     trailerContainer.classList.remove('active');
-                    fullscreenBtn.style.display = 'none';
                     return;
                 }
                 
-                // Если трейлер еще не загружен
-                if (!trailerUrl) {
-                    try {
-                        const filmId = activeModalFilmId;
-                        
-                        // Проверяем нашу базу данных трейлеров
-                        if (TRAILERS_DB[filmId]) {
-                            trailerUrl = TRAILERS_DB[filmId];
-                            trailerContainer.innerHTML = `
-                                <iframe src="${trailerUrl}" frameborder="0" allowfullscreen></iframe>
-                                <button class="fullscreen-btn" id="fullscreen-btn">
-                                    <i class="fas fa-expand"></i>
-                                </button>
-                            `;
-                            
-                            // Добавляем обработчик для кнопки полноэкранного режима
-                            document.getElementById('fullscreen-btn').addEventListener('click', function() {
-                                const iframe = trailerContainer.querySelector('iframe');
-                                if (iframe.requestFullscreen) {
-                                    iframe.requestFullscreen();
-                                } else if (iframe.webkitRequestFullscreen) {
-                                    iframe.webkitRequestFullscreen();
-                                } else if (iframe.msRequestFullscreen) {
-                                    iframe.msRequestFullscreen();
-                                }
-                            });
-                        } else {
-                            // Если трейлера нет в базе, показываем сообщение
-                            trailerContainer.innerHTML = `
-                                <div class="no-trailer">
-                                    <i class="fas fa-film" style="font-size: 2rem; margin-bottom: 0.5rem;"></i>
-                                    <span>Трейлер не найден</span>
-                                </div>
-                            `;
-                        }
-                    } catch (error) {
-                        console.error('Ошибка загрузки трейлера:', error);
+                // Получаем информацию о фильме
+                const film = films.find(f => f.id === activeModalFilmId);
+                if (!film) return;
+                
+                // Генерируем поисковые ссылки
+                const searchQuery = encodeURIComponent(`${film.title} ${film.year} трейлер`);
+                
+                // Устанавливаем ссылки на поиск
+                document.getElementById('trailer-vk').href = `https://vk.com/video?q=${searchQuery}&section=search`;
+                document.getElementById('trailer-ok').href = `https://ok.ru/video/search?query=${searchQuery}`;
+                document.getElementById('trailer-kp').href = `https://www.kinopoisk.ru/index.php?kp_query=${searchQuery}`;
+                document.getElementById('trailer-ivi').href = `https://www.ivi.ru/search/?q=${searchQuery}`;
+                document.getElementById('trailer-yandex').href = `https://yandex.ru/video/search?text=${searchQuery}`;
+                
+                // Проверяем, есть ли готовые трейлеры в нашей базе
+                if (TRAILERS_DB[activeModalFilmId]) {
+                    const trailers = TRAILERS_DB[activeModalFilmId];
+                    
+                    // Если есть прямой трейлер, показываем его
+                    if (trailers.vk) {
                         trailerContainer.innerHTML = `
-                            <div class="no-trailer">
-                                <i class="fas fa-film" style="font-size: 2rem; margin-bottom: 0.5rem;"></i>
-                                <span>Ошибка загрузки трейлера</span>
-                            </div>
+                            <iframe src="${trailers.vk}" frameborder="0" allowfullscreen></iframe>
+                            <button class="fullscreen-btn" id="fullscreen-btn">
+                                <i class="fas fa-expand"></i>
+                            </button>
                         `;
+                        trailerContainer.classList.add('active');
+                        fullscreenBtn.style.display = 'block';
+                        
+                        // Добавляем обработчик для кнопки полноэкранного режима
+                        document.getElementById('fullscreen-btn').addEventListener('click', function() {
+                            const iframe = trailerContainer.querySelector('iframe');
+                            if (iframe.requestFullscreen) {
+                                iframe.requestFullscreen();
+                            } else if (iframe.webkitRequestFullscreen) {
+                                iframe.webkitRequestFullscreen();
+                            } else if (iframe.msRequestFullscreen) {
+                                iframe.msRequestFullscreen();
+                            }
+                        });
+                        
+                        return;
                     }
                 }
                 
-                trailerContainer.classList.add('active');
-                if (trailerUrl) {
-                    fullscreenBtn.style.display = 'block';
-                }
+                // Если прямого трейлера нет, показываем ссылки для поиска
+                trailerLinks.style.display = 'block';
             }
 
             function closeModal() {
