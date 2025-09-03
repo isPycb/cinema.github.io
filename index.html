@@ -557,13 +557,10 @@
         /* Модальное окно для просмотра оценки - ПЕРЕРАБОТАННОЕ */
         .modal-overlay {
             position: absolute;
-            top: 0;
             left: 0;
             right: 0;
             background: transparent;
             z-index: 100;
-            display: flex;
-            justify-content: center;
             padding: 0 20px;
             overflow: hidden;
             max-height: 0;
@@ -579,17 +576,16 @@
             border-radius: 16px;
             padding: 1.5rem;
             width: 100%;
-            max-width: 800px;
             position: relative;
             margin-top: 10px;
             box-shadow: var(--shadow);
-            transform: scale(0.95);
+            transform: translateY(-20px);
             opacity: 0;
             transition: transform 0.3s ease, opacity 0.3s ease;
         }
         
         .modal-overlay.active .modal-content {
-            transform: scale(1);
+            transform: translateY(0);
             opacity: 1;
         }
         
@@ -602,10 +598,8 @@
         .modal-header {
             display: flex;
             justify-content: space-between;
-            align-items: center;
+            align-items: flex-start;
             margin-bottom: 1.5rem;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid var(--border-color);
         }
         
         .modal-title {
@@ -615,6 +609,7 @@
             -webkit-background-clip: text;
             background-clip: text;
             -webkit-text-fill-color: transparent;
+            margin-bottom: 1rem;
         }
         
         .modal-actions {
@@ -631,6 +626,11 @@
             display: flex;
             align-items: center;
             gap: 0.5rem;
+        }
+        
+        .trailer-btn {
+            background: var(--accent-secondary);
+            color: white;
         }
         
         .edit-btn {
@@ -674,6 +674,11 @@
             overflow: hidden;
             border-radius: 12px;
             background: var(--bg-secondary);
+            display: none;
+        }
+        
+        .trailer-container.active {
+            display: block;
         }
         
         .trailer-container iframe {
@@ -841,7 +846,7 @@
         };
 
         function handleImageError(img) {
-            img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjQ1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMzMzIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0iI2ZmZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSI+0J/QvtC00YLRg9C10YIgTm90IEZvdW5kPC90ZXh0Pjwvc3ZnPg==';
+            img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjQ1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMzMzIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgfoW50LXNpemU9IjE4IiBmaWxsPSIjZmZmIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIj7Qn9C+0LTRgtGD0LXQgiBOb3QgRm91bmQ8L3RleHQ+PC9zdmc+';
             img.onerror = null;
         }
 
@@ -950,39 +955,6 @@
                 const film = films.find(f => f.id === filmId);
                 if (!film) return;
 
-                // Получаем трейлер
-                try {
-                    const trailerResponse = await fetch(`${KINOPOISK_API.BASE_URL}/movie/${filmId}`, {
-                        headers: {
-                            'X-API-KEY': KINOPOISK_API.API_KEY,
-                            'Accept': 'application/json',
-                        }
-                    });
-                    
-                    if (trailerResponse.ok) {
-                        const data = await trailerResponse.json();
-                        if (data.videos && data.videos.trailers && data.videos.trailers.length > 0) {
-                            // Ищем трейлер на YouTube
-                            const youtubeTrailer = data.videos.trailers.find(
-                                t => t.site === 'youtube' && (t.type === 'TRAILER' || t.type === 'TEASER')
-                            );
-                            
-                            if (youtubeTrailer) {
-                                trailerUrl = `https://www.youtube.com/embed/${youtubeTrailer.url.split('v=')[1]}`;
-                            } else {
-                                trailerUrl = null;
-                            }
-                        } else {
-                            trailerUrl = null;
-                        }
-                    } else {
-                        trailerUrl = null;
-                    }
-                } catch (error) {
-                    console.error('Ошибка загрузки трейлера:', error);
-                    trailerUrl = null;
-                }
-
                 // Находим элемент фильма и его позицию
                 const filmElement = document.querySelector(`.film-item[data-film-id="${filmId}"]`);
                 if (!filmElement) return;
@@ -1002,34 +974,32 @@
                 modal.innerHTML = `
                     <div class="modal-content glass">
                         <div class="modal-header">
-                            <h2 class="modal-title">${film.title} (${film.year})</h2>
+                            <div>
+                                <h2 class="modal-title">${film.title} (${film.year})</h2>
+                                <div class="mini-score">
+                                    <div class="mini-score-value">${film.totalScore}</div>
+                                    <div class="mini-score-label">Общая оценка</div>
+                                </div>
+                            </div>
                             <div class="modal-actions">
+                                <button class="modal-btn trailer-btn" id="trailer-btn">
+                                    <i class="fas fa-play"></i> Трейлер
+                                </button>
                                 <button class="modal-btn edit-btn" id="edit-film-btn">
-                                    <i class="fas fa-edit"></i> Редактировать
+                                    <i class="fas fa-edit"></i> 
                                 </button>
                                 <button class="modal-btn close-btn" id="close-modal-btn">
-                                    <i class="fas fa-times"></i> Закрыть
+                                    <i class="fas fa-times"></i> 
                                 </button>
                             </div>
                         </div>
                         
-                        <div class="mini-score">
-                            <div class="mini-score-value">${film.totalScore}</div>
-                            <div class="mini-score-label">Общая оценка</div>
-                        </div>
-                        
-                        ${trailerUrl ? `
-                        <div class="trailer-container">
-                            <iframe src="${trailerUrl}" frameborder="0" allowfullscreen></iframe>
-                        </div>
-                        ` : `
-                        <div class="trailer-container">
+                        <div class="trailer-container" id="trailer-container">
                             <div class="no-trailer">
                                 <i class="fas fa-film" style="font-size: 2rem; margin-bottom: 0.5rem;"></i>
                                 <span>Трейлер не найден</span>
                             </div>
                         </div>
-                        `}
                         
                         <div class="criteria-grid compact">
                             ${criteriaConfig.map(criterion => `
@@ -1085,6 +1055,7 @@
                 document.getElementById('close-modal-btn').addEventListener('click', closeModal);
                 document.getElementById('edit-film-btn').addEventListener('click', toggleEditMode);
                 document.getElementById('save-changes-btn').addEventListener('click', saveFilmChanges);
+                document.getElementById('trailer-btn').addEventListener('click', toggleTrailer);
                 
                 // Обработчики для полей в режиме редактирования
                 document.getElementById('edit-genre-score').addEventListener('input', (e) => {
@@ -1104,6 +1075,47 @@
                         });
                     }
                 });
+            }
+
+            async function toggleTrailer() {
+                const trailerContainer = document.getElementById('trailer-container');
+                
+                if (trailerContainer.classList.contains('active')) {
+                    trailerContainer.classList.remove('active');
+                    return;
+                }
+                
+                // Если трейлер еще не загружен
+                if (!trailerUrl) {
+                    try {
+                        const filmId = activeModalFilmId;
+                        const trailerResponse = await fetch(`${KINOPOISK_API.BASE_URL}/movie/${filmId}`, {
+                            headers: {
+                                'X-API-KEY': KINOPOISK_API.API_KEY,
+                                'Accept': 'application/json',
+                            }
+                        });
+                        
+                        if (trailerResponse.ok) {
+                            const data = await trailerResponse.json();
+                            if (data.videos && data.videos.trailers && data.videos.trailers.length > 0) {
+                                // Ищем трейлер на YouTube
+                                const youtubeTrailer = data.videos.trailers.find(
+                                    t => t.site === 'youtube' && (t.type === 'TRAILER' || t.type === 'TEASER')
+                                );
+                                
+                                if (youtubeTrailer) {
+                                    trailerUrl = `https://www.youtube.com/embed/${youtubeTrailer.url.split('v=')[1]}`;
+                                    trailerContainer.innerHTML = `<iframe src="${trailerUrl}" frameborder="0" allowfullscreen></iframe>`;
+                                }
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Ошибка загрузки трейлера:', error);
+                    }
+                }
+                
+                trailerContainer.classList.add('active');
             }
 
             function closeModal() {
@@ -1128,6 +1140,7 @@
                 
                 activeModalFilmId = null;
                 isEditMode = false;
+                trailerUrl = null;
             }
 
             function toggleEditMode() {
